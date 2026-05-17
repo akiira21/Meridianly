@@ -4,3 +4,7 @@ SQLAlchemy==2.0.35
 python-dotenv==1.0.1
 psycopg2
 bcrypt
+PyJWT
+pydantic
+alembic
+jwt
