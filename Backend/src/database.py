@@ -80,7 +80,7 @@ def init_database(database_url: str) -> None:
 
 
 @contextmanager
-def get_db_session() -> Generator[Session, None, None]:
+def get_db_session():
     with db.session() as session:
         yield session
 

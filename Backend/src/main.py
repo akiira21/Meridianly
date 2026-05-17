@@ -1,24 +1,34 @@
-from config import Config
-from fastapi import FastAPI
+from contextlib import asynccontextmanager
 
+from config import Config
 from database import db
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from router import v1_router
 
 config = Config()
 
-app = FastAPI(title="Meridian API")
 
-@app.get("/health")
-def health():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     db.init(config.DATABASE_URL)
-    return  {
-        "status": "ok",
-        "database": "ok" if db.ping() else "failed"
-    }
+    yield
 
-@app.get("/health/db")
-def health_db():
-    return {"status": "ok" if db.ping() else "error"}
 
+app = FastAPI(title="Meridian API", lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=config.ALLOWED_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+API_PREFIX = "/api/v1"
+
+app.include_router(v1_router, prefix=API_PREFIX)
 
 if __name__ == "__main__":
     import uvicorn

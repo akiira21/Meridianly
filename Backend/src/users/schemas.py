@@ -2,10 +2,19 @@ from datetime import datetime
 from pydantic import BaseModel
 
 
+class UserModel(BaseModel):
+    username: str
+    email: str
+    name: str | None
+    avatar_url: str | None
+
+
 class CreateUserRequest(BaseModel):
     username: str
     email: str
     password: str
+    name: str
+    avatar_url: str
 
 
 class CreateUserRepoResponse(BaseModel):
