@@ -15,7 +15,7 @@ class AuthRepository:
         db, user_id, token: str, expire_at: datetime, device_info, ip_address: str
     ):
 
-        try: 
+        try:
 
             hash_ip_addr = hash_ip(ip_address)
 
@@ -28,7 +28,8 @@ class AuthRepository:
             )
 
             db.add(user_session)
-            db.flush()
+            db.commit()
+            db.refresh(user_session)
 
             session_id = user_session.id
             logger.info(f"Users session created with: {session_id}")
@@ -36,11 +37,12 @@ class AuthRepository:
             return session_id
 
         except IntegrityError as err:
-            logger.error(f"Integrity error while creating user: {err}")
+            logger.error(f"Integrity error while creating session: {err}")
+            db.rollback()
             raise
 
         except SQLAlchemyError as err:
-            logger.error(f"Sql Error creating user: {err}")
+            logger.error(f"Sql Error creating session: {err}")
             db.rollback()
             raise
 

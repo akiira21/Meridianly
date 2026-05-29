@@ -1,4 +1,3 @@
-from contextlib import contextmanager
 import logging
 from typing import Generator, Optional
 
@@ -39,7 +38,6 @@ class Database:
 
         self.SessionLocal.configure(bind=self._engine)
 
-    @contextmanager
     def session(self) -> Generator[Session, None, None]:
         if self._engine is None:
             logger.error("Database is not initialized. Call db.init(...) first.")
@@ -73,16 +71,21 @@ class Database:
 
 db = Database()
 Base = db.Base
-SessionLocal = db.SessionLocal
 
 
 def init_database(database_url: str) -> None:
     db.init(database_url)
 
 
-@contextmanager
 def get_db_session():
-    with db.session() as session:
+    session = db.SessionLocal()
+    try:
         yield session
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 

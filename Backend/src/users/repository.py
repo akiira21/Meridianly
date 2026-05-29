@@ -22,9 +22,8 @@ class UserRepository:
             )
 
             db.add(user)
-            db.flush()
-            user_id = user.id
-            logger.info(f"User created with user_id: {user_id}")
+            db.commit()
+            db.refresh(user)
 
             res = UserRepoResponse(
                     user_id=user.id,
@@ -36,10 +35,11 @@ class UserRepository:
                     created_at=user.created_at
                     ))
 
-            return res 
+            return res
 
         except IntegrityError as err:
             logger.error(f"Integrity error while creating user: {err}")
+            db.rollback()
             raise
 
         except SQLAlchemyError as err:
