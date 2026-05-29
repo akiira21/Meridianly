@@ -62,4 +62,4 @@ def get_current_user(
             detail="User not found",
         )
 
-    return user
+    return {"user_id": uid, "data": user}

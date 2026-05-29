@@ -61,3 +61,53 @@ class AuthRepository:
             db.rollback()
             raise
 
+    @staticmethod
+    def getActiveSessions(db, user_id):
+        try:
+            sessions = db.query(Sessions).filter(
+                Sessions.user_id == user_id,
+                Sessions.revoke_at.is_(None),
+            ).order_by(Sessions.created_at.desc()).all()
+
+            return sessions
+
+        except SQLAlchemyError as err:
+            logger.error(f"Sql Error fetching active sessions: {err}")
+            db.rollback()
+            raise
+
+    @staticmethod
+    def revokeSession(db, token: str):
+        try:
+            session = db.query(Sessions).filter(Sessions.token == token).first()
+            if session:
+                session.revoke_at = datetime.now()
+                db.commit()
+                return True
+            return False
+
+        except SQLAlchemyError as err:
+            logger.error(f"Sql Error revoking session: {err}")
+            db.rollback()
+            raise
+
+    @staticmethod
+    def revokeSessionById(db, session_id: int, user_id: int):
+        try:
+            session = db.query(Sessions).filter(
+                Sessions.id == session_id,
+                Sessions.user_id == user_id,
+                Sessions.revoke_at.is_(None),
+            ).first()
+
+            if session:
+                session.revoke_at = datetime.now()
+                db.commit()
+                return True
+            return False
+
+        except SQLAlchemyError as err:
+            logger.error(f"Sql Error revoking session by id: {err}")
+            db.rollback()
+            raise
+
