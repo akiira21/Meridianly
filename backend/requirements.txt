@@ -7,4 +7,3 @@ bcrypt
 PyJWT
 pydantic
 alembic
-jwt
