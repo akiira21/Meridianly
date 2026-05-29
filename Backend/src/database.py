@@ -48,7 +48,8 @@ class Database:
         session = self.SessionLocal()
         try:
             yield session
-            session.commit()
+            if session.new or session.dirty or session.deleted:
+                session.commit()
         except Exception as exc:
             session.rollback()
             logger.error(f"Failed to create database session: {exc}")

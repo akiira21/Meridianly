@@ -13,8 +13,8 @@ class CreateUserRequest(BaseModel):
     username: str
     email: str
     password: str
-    name: str
-    avatar_url: str
+    name: str | None = None
+    avatar_url: str | None = None
 
 
 class CreateUserRepoResponse(BaseModel):
@@ -29,3 +29,8 @@ class UserResponse(BaseModel):
     email: str
     avatar_url: str | None = None
     created_at: datetime
+
+class UserRepoResponse(BaseModel):
+    user_id: int 
+    data:UserResponse
+

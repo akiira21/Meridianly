@@ -1,4 +1,8 @@
+from datetime import UTC, datetime, timedelta
 import bcrypt
+import hashlib
+import ipaddress
+import jwt
 
 def generate_hash(password: str):
     salt = bcrypt.gensalt()
@@ -12,6 +16,11 @@ def verify_password(password, hash_password) -> bool:
     return bcrypt.checkpw(password.encode('utf-8'), hash_password.encode('utf-8'))
 
 
+def hash_ip(ip_address: str) -> bytes:
+    packed = ipaddress.ip_address(ip_address).packed
+    return hashlib.sha256(packed).digest()[:16]
+
+
 def serialise_email(email):
     if not email or not isinstance(email, str):
         return None
@@ -21,3 +30,22 @@ def serialise_email(email):
 
     return serialised_email
 
+def generate_access_token(data: dict, expire_delta: int, SECRET_KEY: str):
+    to_encode = data.copy()
+    expire = datetime.now(UTC) + timedelta(minutes=expire_delta)
+    to_encode.update({"exp": expire})
+
+    encoded = jwt.encode(to_encode, SECRET_KEY, algorithm='HS256')
+    return encoded
+
+def generate_refresh_token(data: dict, expire_delta: int, SECRET_KEY: str):
+    to_encode = data.copy()
+    expire = datetime.now(UTC) + timedelta(days=expire_delta)
+    to_encode.update({"exp": expire})
+
+    encoded = jwt.encode(to_encode, SECRET_KEY, algorithm='HS256')
+    return encoded, expire
+
+
+def decode_token(token: str, SECRET_KEY: str) -> dict:
+    return jwt.decode(token, SECRET_KEY, algorithms=['HS256'])

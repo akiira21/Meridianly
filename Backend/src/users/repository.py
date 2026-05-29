@@ -1,14 +1,13 @@
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 import logging
 
-from users.schemas import CreateUserRequest, UserResponse
+from users.schemas import CreateUserRequest, UserRepoResponse, UserResponse
 from users.models import Users
 
 from utils.auth import generate_hash, verify_password
 
 
 logger = logging.getLogger(__name__)
-
 
 class UserRepository:
     @staticmethod
@@ -27,13 +26,15 @@ class UserRepository:
             user_id = user.id
             logger.info(f"User created with user_id: {user_id}")
 
-            res = UserResponse(
+            res = UserRepoResponse(
+                    user_id=user.id,
+                    data=UserResponse(
                     name=user.name,
                     username=user.username,
                     email=user.email,
                     avatar_url=user.avatar_url,
                     created_at=user.created_at
-                    )
+                    ))
 
             return res 
 
@@ -63,7 +64,6 @@ class UserRepository:
 
         except SQLAlchemyError as err:
             logger.error(f"Error while fetching user details: {err}")
-            db.rollback()
             raise
 
     @staticmethod
@@ -72,19 +72,21 @@ class UserRepository:
             user = db.query(Users).filter(Users.email == email).first()
 
             if user:
-                return UserResponse(
-                    name=user.name,
-                    username=user.username,
-                    email=user.email,
-                    avatar_url=user.avatar_url,
-                    created_at=user.created_at,
+                return UserRepoResponse(
+                    user_id=user.id,
+                    data=UserResponse(
+                        name=user.name,
+                        username=user.username,
+                        email=user.email,
+                        avatar_url=user.avatar_url,
+                        created_at=user.created_at,
+                    )
                 )
 
             return None
 
         except SQLAlchemyError as err:
             logger.error(f"Error in finding user with email: {err}")
-            db.rollback()
             raise
 
     @classmethod
@@ -95,17 +97,19 @@ class UserRepository:
                 return None
 
             if verify_password(password, user.password):
-                return UserResponse(
-                    name=user.name,
-                    username=user.username,
-                    email=user.email,
-                    avatar_url=user.avatar_url,
-                    created_at=user.created_at,
+                return UserRepoResponse(
+                    user_id=user.id,
+                    data=UserResponse(
+                        name=user.name,
+                        username=user.username,
+                        email=user.email,
+                        avatar_url=user.avatar_url,
+                        created_at=user.created_at,
+                    )
                 )
 
             return None
 
         except SQLAlchemyError as err:
             logger.error(f"Error verifying user: {err}")
-            db.rollback()
             raise
