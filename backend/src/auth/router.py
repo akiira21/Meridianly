@@ -7,6 +7,7 @@ from auth.repository import AuthRepository
 from auth.dependencies import get_current_user
 from config import Config
 from database import get_db_session
+from limiter import limiter
 from users.schemas import CreateUserRequest
 from users.services import UserService
 
@@ -19,10 +20,11 @@ auth_router = APIRouter()
 
 
 @auth_router.post("/login", response_model=AuthTokenResponse)
+@limiter.limit("5/minute")
 def login(
+    request: Request,
     response: Response,
     data: LoginRequestModel,
-    request: Request,
     db=Depends(get_db_session),
     config: Config = Depends(get_config),
 ):
@@ -140,6 +142,7 @@ def revoke_session(
 
 
 @auth_router.post("/register", status_code=201)
-def register(data: CreateUserRequest, db=Depends(get_db_session)):
+@limiter.limit("3/hour")
+def register(request: Request, data: CreateUserRequest, db=Depends(get_db_session)):
     user = UserService.create_user(db, data)
     return user

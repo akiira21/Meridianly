@@ -2,9 +2,10 @@ from contextlib import asynccontextmanager
 
 from config import Config
 from database import db
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-
+from limiter import limiter
+from slowapi.errors import RateLimitExceeded
 from router import v1_router
 
 config = Config()
@@ -17,6 +18,16 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Meridian API", lifespan=lifespan)
+app.state.limiter = limiter
+
+
+@app.exception_handler(RateLimitExceeded)
+async def rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded):
+    from fastapi.responses import JSONResponse
+    return JSONResponse(
+        status_code=429,
+        content={"detail": "Rate limit exceeded. Please try again later."},
+    )
 
 app.add_middleware(
     CORSMiddleware,
