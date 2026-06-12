@@ -1,7 +1,6 @@
 import {
   Bell,
   Check,
-  ChevronDown,
   ChevronRight,
   Clock,
   Droplets,

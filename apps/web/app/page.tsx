@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useAuthStore } from "@/lib/auth-store";
 import Navbar from "@/components/navbar";
 import BentoGrid from "@/components/ui/bento-grid";
 import {
@@ -14,6 +17,8 @@ import {
 } from "lucide-react";
 
 export default function HomePage() {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
@@ -34,19 +39,23 @@ export default function HomePage() {
               moments. Everything you need, nothing you don&apos;t.
             </p>
             <div className="mt-10 flex items-center gap-4">
-              <Link
-                href="/signup"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-foreground text-background rounded-full font-body text-sm font-medium hover:opacity-80 transition-opacity"
-              >
-                Get started
-                <ArrowRight size={16} />
-              </Link>
-              <Link
-                href="/design"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-background text-foreground border border-border rounded-full font-body text-sm font-medium hover:bg-muted transition-colors"
-              >
-                Explore design
-              </Link>
+              {isAuthenticated ? (
+                <Link
+                  href="/todos"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-foreground text-background rounded-full font-body text-sm font-medium hover:opacity-80 transition-opacity"
+                >
+                  Go to your todos
+                  <ArrowRight size={16} />
+                </Link>
+              ) : (
+                <Link
+                  href="/signup"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-foreground text-background rounded-full font-body text-sm font-medium hover:opacity-80 transition-opacity"
+                >
+                  Get started
+                  <ArrowRight size={16} />
+                </Link>
+              )}
             </div>
           </div>
         </section>
@@ -99,6 +108,29 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* Logged-in user dashboard preview */}
+        {isAuthenticated && (
+          <section className="px-6 py-20 border-t border-border bg-muted/30">
+            <div className="max-w-3xl mx-auto text-center">
+              <h2 className="font-heading text-2xl md:text-3xl font-medium tracking-tight mb-4">
+                Welcome back
+              </h2>
+              <p className="text-muted-foreground font-body mb-8">
+                Continue where you left off. Your todos and stats are waiting.
+              </p>
+              <div className="flex items-center justify-center gap-4">
+                <Link
+                  href="/todos"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-foreground text-background rounded-full font-body text-sm font-medium hover:opacity-80 transition-opacity"
+                >
+                  <Check size={16} />
+                  View todos
+                </Link>
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* Bento preview */}
         <section className="px-6 py-20 border-t border-border bg-muted/30">
           <div className="max-w-3xl mx-auto">
@@ -149,13 +181,23 @@ export default function HomePage() {
               productive.
             </p>
             <div className="mt-8">
-              <Link
-                href="/signup"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-foreground text-background rounded-full font-body text-sm font-medium hover:opacity-80 transition-opacity"
-              >
-                Create free account
-                <ArrowRight size={16} />
-              </Link>
+              {isAuthenticated ? (
+                <Link
+                  href="/todos"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-foreground text-background rounded-full font-body text-sm font-medium hover:opacity-80 transition-opacity"
+                >
+                  Go to your todos
+                  <ArrowRight size={16} />
+                </Link>
+              ) : (
+                <Link
+                  href="/signup"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-foreground text-background rounded-full font-body text-sm font-medium hover:opacity-80 transition-opacity"
+                >
+                  Create free account
+                  <ArrowRight size={16} />
+                </Link>
+              )}
             </div>
           </div>
         </section>

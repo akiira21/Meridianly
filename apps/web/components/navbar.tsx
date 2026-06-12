@@ -34,12 +34,14 @@ export default function Navbar() {
           >
             Home
           </Link>
-          <Link
-            href="/design"
-            className="text-sm font-body text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Design
-          </Link>
+          {mounted && isAuthenticated && (
+            <Link
+              href="/todos"
+              className="text-sm font-body text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Todos
+            </Link>
+          )}
           <div className="h-4 w-px bg-border" />
           <ModeToggle />
           {mounted && isAuthenticated ? (
@@ -87,13 +89,15 @@ export default function Navbar() {
           >
             Home
           </Link>
-          <Link
-            href="/design"
-            className="block text-sm font-body text-muted-foreground hover:text-foreground transition-colors"
-            onClick={() => setMobileOpen(false)}
-          >
-            Design
-          </Link>
+          {mounted && isAuthenticated && (
+            <Link
+              href="/todos"
+              className="block text-sm font-body text-muted-foreground hover:text-foreground transition-colors"
+              onClick={() => setMobileOpen(false)}
+            >
+              Todos
+            </Link>
+          )}
           <div className="pt-2 border-t border-border">
             <ModeToggle />
           </div>

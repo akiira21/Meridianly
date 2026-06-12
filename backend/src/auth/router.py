@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, Request, Response
 from fastapi.responses import JSONResponse
 
@@ -42,7 +44,7 @@ def login(
         secure=not config.IS_DEVELOPMENT,
         samesite="lax",
         max_age=config.REFRESH_TOKEN_EXPIRE * 24 * 60 * 60,
-        path="/api/v1/auth/refresh",
+        path="/api/v1/auth",
     )
 
     return AuthTokenResponse(
@@ -80,7 +82,7 @@ def refresh_token(
         secure=not config.IS_DEVELOPMENT,
         samesite="lax",
         max_age=config.REFRESH_TOKEN_EXPIRE * 24 * 60 * 60,
-        path="/api/v1/auth/refresh",
+        path="/api/v1/auth",
     )
 
     return AuthTokenResponse(
@@ -95,12 +97,19 @@ def logout(
     response: Response,
     request: Request,
     db=Depends(get_db_session),
+    user=Depends(get_current_user),
 ):
     refresh_token = request.cookies.get("refresh_token")
     if refresh_token:
         AuthRepository.revokeSession(db, refresh_token)
+    else:
+        # Fallback: revoke all active sessions for the user
+        active_sessions = AuthRepository.getActiveSessions(db, user["user_id"])
+        for session in active_sessions:
+            session.revoke_at = datetime.now()
+        db.commit()
 
-    response.delete_cookie(key="refresh_token", path="/api/v1/auth/refresh")
+    response.delete_cookie(key="refresh_token", path="/api/v1/auth")
     return {"message": "Logged out successfully"}
 
 
@@ -138,7 +147,7 @@ def revoke_session(
     revoked_token = request.cookies.get("refresh_token")
     if revoked_token:
         AuthRepository.revokeSession(db, revoked_token)
-    response.delete_cookie(key="refresh_token", path="/api/v1/auth/refresh")
+    response.delete_cookie(key="refresh_token", path="/api/v1/auth")
 
     return {"message": "Session revoked successfully"}
 

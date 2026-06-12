@@ -15,6 +15,7 @@ interface AuthState {
   isAuthenticated: boolean;
   loading: boolean;
   error: string | null;
+  rehydrated: boolean;
 
   setUser: (user: User | null) => void;
   setLoading: (loading: boolean) => void;
@@ -27,7 +28,6 @@ interface AuthState {
     password: string;
   }) => Promise<void>;
   logout: () => Promise<void>;
-  initialize: () => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -37,6 +37,7 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       loading: false,
       error: null,
+      rehydrated: false,
 
       setUser: (user) =>
         set({ user, isAuthenticated: !!user, error: null }),
@@ -110,20 +111,15 @@ export const useAuthStore = create<AuthState>()(
           });
         }
       },
-
-      initialize: () => {
-        const token =
-          typeof window !== "undefined"
-            ? localStorage.getItem("meridian_access_token")
-            : null;
-        if (token) {
-          set({ isAuthenticated: true });
-        }
-      },
     }),
     {
       name: "meridian-auth",
       partialize: (state) => ({ user: state.user, isAuthenticated: state.isAuthenticated }),
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          state.rehydrated = true;
+        }
+      },
     }
   )
 );

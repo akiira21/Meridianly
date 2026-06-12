@@ -22,101 +22,17 @@ PLAN_LIMITS = {
 }
 
 
-class SimpleTodoAI:
-    """Mock AI assistant that parses natural language and generates structured todos.
-    In production, this would be replaced with an LLM API call (OpenAI, Claude, etc.).
-    """
+from ai.services import TodoLLMService
 
-    @staticmethod
-    def generate_todos(prompt: str) -> list[AITodoItem]:
-        prompt_lower = prompt.lower()
-        todos = []
 
-        # Simple keyword-based generation for demo
-        keywords = {
-            "homework": ("high", "desk", 60),
-            "study": ("high", "desk", 90),
-            "meeting": ("medium", "desk", 30),
-            "call": ("medium", "phone", 15),
-            "groceries": ("low", "errands", 30),
-            "shop": ("low", "errands", 45),
-            "walk": ("low", "errands", 20),
-            "clean": ("low", "desk", 30),
-            "cook": ("medium", "desk", 45),
-            "read": ("medium", "desk", 30),
-            "email": ("low", "phone", 10),
-            "exercise": ("high", "errands", 45),
-            "meditate": ("low", "desk", 10),
-            "code": ("high", "desk", 120),
-            "write": ("high", "desk", 60),
-            "design": ("high", "desk", 90),
-            "present": ("high", "desk", 45),
-            "review": ("medium", "desk", 30),
-            "plan": ("medium", "desk", 20),
-            "organize": ("low", "desk", 25),
-            "relax": ("low", "desk", 30),
-            "sleep": ("low", "desk", 480),
-            "nap": ("low", "desk", 30),
-        }
-
-        # Split by common separators
-        tasks = [t.strip() for t in prompt_lower.replace(",", "|").replace("and", "|").replace(";", "|").split("|")]
-        tasks = [t for t in tasks if t and len(t) > 2]
-
-        for task in tasks:
-            best_energy = "medium"
-            best_context = "any"
-            best_minutes = 30
-
-            for keyword, (energy, context, minutes) in keywords.items():
-                if keyword in task:
-                    best_energy = energy
-                    best_context = context
-                    best_minutes = minutes
-                    break
-
-            # Clean up the task title
-            prefixes = [
-                "need to", "i need to", "i have to", "i should",
-                "to ", "finish my", "prepare for", "buy", "do", "get",
-                "make", "take", "go",
-            ]
-            title = task.strip()
-            for prefix in prefixes:
-                if title.startswith(prefix):
-                    title = title[len(prefix):].strip()
-                    break
-
-            title = title.strip().capitalize()
-            if not title:
-                continue
-
-            todos.append(AITodoItem(
-                title=title,
-                description=None,
-                energy_level=EnergyLevel(best_energy),
-                context=Context(best_context),
-                estimated_minutes=best_minutes,
-            ))
-
-        if not todos:
-            # Fallback: create a single todo from the whole prompt
-            todos.append(AITodoItem(
-                title=prompt[:50].strip().capitalize(),
-                description=prompt,
-                energy_level=EnergyLevel.MEDIUM,
-                context=Context.ANY,
-                estimated_minutes=30,
-            ))
-
-        return todos
+ai_service = TodoLLMService()
 
 
 @ai_router.post("/todos", response_model=AITodoResponse)
 @require_auth
 @rate_limit("5/minute")
 def generate_todos(
-    request: AITodoRequest,
+    data: AITodoRequest,
     db: Session = Depends(get_db_session),
     user: dict = Depends(get_current_user),
 ):
@@ -144,8 +60,8 @@ def generate_todos(
             detail=f"AI request limit reached for {plan.value} plan. Limit: {limit}/month",
         )
 
-    # Generate todos
-    generated = SimpleTodoAI.generate_todos(request.prompt)
+    # Generate todos using LLM (with fallback)
+    generated = ai_service.generate_todos(data.prompt)
 
     # Increment usage
     user_data.ai_requests_used += 1

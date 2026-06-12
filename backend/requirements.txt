@@ -8,3 +8,4 @@ PyJWT
 pydantic
 alembic
 slowapi
+openai==1.68.0

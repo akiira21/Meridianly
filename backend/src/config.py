@@ -17,6 +17,7 @@ class Config:
     JWT_SECRET: str = os.getenv("JWT_SECRET", "your-secret")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30))
     REFRESH_TOKEN_EXPIRE: int = int(os.getenv("REFRESH_TOKEN_EXPIRE", 7))
+    OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
 
 
     IS_DEVELOPMENT: bool = ENVIRONMENT == "development" 

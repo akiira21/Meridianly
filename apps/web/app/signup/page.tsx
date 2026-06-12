@@ -38,12 +38,13 @@ export default function SignupPage() {
   const loading = useAuthStore((state) => state.loading);
   const storeError = useAuthStore((state) => state.error);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const rehydrated = useAuthStore((state) => state.rehydrated);
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (rehydrated && isAuthenticated) {
       router.push("/");
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, rehydrated, router]);
 
   const [showPassword, setShowPassword] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);

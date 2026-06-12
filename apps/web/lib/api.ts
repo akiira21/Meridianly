@@ -78,6 +78,89 @@ export interface AuthTokenResponse {
   user_id: string;
 }
 
+export interface Todo {
+  id: number;
+  user_id: number;
+  title: string;
+  description: string | null;
+  energy_level: "low" | "medium" | "high";
+  context: "desk" | "phone" | "errands" | "quick" | "any";
+  status: "active" | "completed" | "snoozed" | "archived" | "parking_lot";
+  snoozed_until: string | null;
+  estimated_minutes: number | null;
+  actual_minutes: number | null;
+  completed_at: string | null;
+  done_for_day: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TodoListResponse {
+  items: Todo[];
+  total: number;
+}
+
+export interface TodoCreatePayload {
+  title: string;
+  description?: string | null;
+  energy_level?: "low" | "medium" | "high";
+  context?: "desk" | "phone" | "errands" | "quick" | "any";
+  estimated_minutes?: number | null;
+  status?: "active" | "completed" | "snoozed" | "archived" | "parking_lot";
+}
+
+export interface TodoUpdatePayload {
+  title?: string;
+  description?: string | null;
+  energy_level?: "low" | "medium" | "high";
+  context?: "desk" | "phone" | "errands" | "quick" | "any";
+  estimated_minutes?: number | null;
+  status?: "active" | "completed" | "snoozed" | "archived" | "parking_lot";
+  snoozed_until?: string | null;
+  done_for_day?: boolean;
+}
+
+export interface TodoStats {
+  total: number;
+  by_status: Record<string, number>;
+  completed_today: number;
+  active: number;
+  snoozed: number;
+  parking_lot: number;
+}
+
+export interface DoneForDayResponse {
+  completed_today: number;
+  carried_forward: number;
+  archived: number;
+  message: string;
+}
+
+export interface AITodoRequest {
+  prompt: string;
+}
+
+export interface AITodoItem {
+  title: string;
+  description: string | null;
+  energy_level: "low" | "medium" | "high";
+  context: "desk" | "phone" | "errands" | "quick" | "any";
+  estimated_minutes: number | null;
+}
+
+export interface AITodoResponse {
+  todos: AITodoItem[];
+  created_count: number;
+}
+
+export interface UserPlanInfo {
+  plan: string;
+  ai_requests_used: number;
+  ai_requests_limit: number;
+  ai_requests_remaining: number;
+  ai_requests_reset_at: string | null;
+}
+
 export const api = {
   login: (payload: LoginPayload) =>
     axiosInstance.post<LoginResponse>("/api/v1/auth/login", payload),
@@ -90,6 +173,58 @@ export const api = {
 
   logout: () =>
     axiosInstance.post<{ message: string }>("/api/v1/auth/logout"),
+
+  // Todos
+  getTodos: (params?: Record<string, string | boolean | undefined>) =>
+    axiosInstance.get<TodoListResponse>("/api/v1/todos", { params }),
+
+  getTodo: (id: number) =>
+    axiosInstance.get<Todo>(`/api/v1/todos/${id}`),
+
+  createTodo: (payload: TodoCreatePayload) =>
+    axiosInstance.post<Todo>("/api/v1/todos", payload),
+
+  updateTodo: (id: number, payload: TodoUpdatePayload) =>
+    axiosInstance.patch<Todo>(`/api/v1/todos/${id}`, payload),
+
+  deleteTodo: (id: number) =>
+    axiosInstance.delete(`/api/v1/todos/${id}`),
+
+  snoozeTodo: (id: number, duration: string) =>
+    axiosInstance.post<Todo>(`/api/v1/todos/${id}/snooze`, { duration }),
+
+  startFocus: (id: number) =>
+    axiosInstance.post<Todo>(`/api/v1/todos/${id}/focus/start`),
+
+  endFocus: (id: number, actual_minutes: number) =>
+    axiosInstance.post<Todo>(`/api/v1/todos/${id}/focus/end`, { actual_minutes }),
+
+  promoteTodo: (id: number) =>
+    axiosInstance.post<Todo>(`/api/v1/todos/${id}/promote`),
+
+  getStats: () =>
+    axiosInstance.get<TodoStats>("/api/v1/todos/stats"),
+
+  getSuggestedTodos: () =>
+    axiosInstance.get<{ suggested: Todo[]; hour: number | null }>("/api/v1/todos/suggest"),
+
+  getParkingLot: () =>
+    axiosInstance.get<TodoListResponse>("/api/v1/todos/parking-lot"),
+
+  doneForDay: (carryForward: boolean = true) =>
+    axiosInstance.post<DoneForDayResponse>("/api/v1/todos/done-for-day", {
+      carry_forward_unfinished: carryForward,
+    }),
+
+  reactivateSnoozed: () =>
+    axiosInstance.post<{ reactivated: number; items: Todo[] }>("/api/v1/todos/reactivate-snoozed"),
+
+  // AI
+  generateTodos: (prompt: string) =>
+    axiosInstance.post<AITodoResponse>("/api/v1/ai/todos", { prompt }),
+
+  getPlanInfo: () =>
+    axiosInstance.get<UserPlanInfo>("/api/v1/ai/plan"),
 };
 
 export function setAccessToken(token: string) {
