@@ -4,10 +4,10 @@ A personal life management PWA — water tracker, todos, reminders, events, imag
 
 ## TODO
 
-- [ ] Setup Next.js 14+ (App Router, PWA with Serwist, Radix UI + Tailwind CSS)
-- [ ] Setup FastAPI backend (async) with SQLAlchemy, PostgreSQL, and Alembic
-- [ ] Docker Compose for Postgres + backend
-- [ ] Auth — PIN/password login with JWT
+- [x] Setup Next.js 14+ (App Router, PWA with Serwist, Radix UI + Tailwind CSS)
+- [x] Setup FastAPI backend (async) with SQLAlchemy, PostgreSQL, and Alembic
+- [x] Docker Compose for Postgres + backend
+- [x] Auth — PIN/password login with JWT
 - [ ] Water tracker — daily goal, progress ring, history
 - [ ] Todos — CRUD, priorities, due dates, filters
 - [ ] Reminders — time-based with repeat rules
