@@ -28,6 +28,9 @@ class UserResponse(BaseModel):
     username: str
     email: str
     avatar_url: str | None = None
+    plan: str | None = None
+    ai_requests_used: int | None = None
+    ai_requests_reset_at: datetime | None = None
     created_at: datetime
 
 class UserRepoResponse(BaseModel):

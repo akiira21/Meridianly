@@ -8,8 +8,10 @@ from auth.dependencies import get_current_user
 from config import Config
 from database import get_db_session
 from limiter import limiter
+from middleware.decorators import require_auth, require_admin, require_plan, rate_limit
 from users.schemas import CreateUserRequest
 from users.services import UserService
+from users.repository import UserRepository
 
 
 def get_config() -> Config:
@@ -146,3 +148,47 @@ def revoke_session(
 def register(request: Request, data: CreateUserRequest, db=Depends(get_db_session)):
     user = UserService.create_user(db, data)
     return user
+
+
+# --- Middleware-decorated examples ---
+
+@auth_router.get("/users", tags=["admin"])
+@require_auth
+@require_admin
+@rate_limit("30/minute")
+def list_all_users(
+    db=Depends(get_db_session),
+    user=Depends(get_current_user),
+):
+    """Admin-only: list all users. Uses @require_auth + @require_admin + @rate_limit decorators."""
+    from sqlalchemy import select
+    from users.models import Users
+    result = db.execute(select(Users))
+    users = result.scalars().all()
+    return [
+        {
+            "id": u.id,
+            "username": u.username,
+            "email": u.email,
+            "role": u.role.value,
+            "plan": u.plan.value,
+            "ai_requests_used": u.ai_requests_used,
+            "is_active": u.is_active,
+            "created_at": u.created_at,
+        }
+        for u in users
+    ]
+
+
+@auth_router.get("/me/plan", tags=["user"])
+@require_auth
+@rate_limit("60/minute")
+def get_my_plan(user: dict = Depends(get_current_user)):
+    """Get current user's plan info. Uses @require_auth + @rate_limit decorators."""
+    u = user["data"]
+    return {
+        "user_id": user["user_id"],
+        "username": u.username,
+        "plan": u.plan.value if hasattr(u, "plan") else "free",
+        "role": u.role.value,
+    }

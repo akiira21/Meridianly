@@ -31,7 +31,6 @@ class Users(Base):
     avatar_url: Mapped[str] = mapped_column(String(2083), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
-    # AI plan and usage
     plan: Mapped[UserPlan] = mapped_column(SQLEnum(UserPlan), name="user_plan", nullable=False, default=UserPlan.FREE)
     ai_requests_used: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     ai_requests_reset_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)

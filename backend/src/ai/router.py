@@ -3,12 +3,12 @@ from sqlalchemy.orm import Session
 
 from auth.dependencies import get_current_user
 from database import get_db_session
+from middleware.decorators import require_auth, require_plan, rate_limit
 from todos.models import EnergyLevel, Context, TodoStatus
 from todos.schemas import AITodoRequest, AITodoResponse, AITodoItem, TodoCreateRequest
 from todos.services import TodoService
 from users.repository import UserRepository
 from users.models import UserPlan
-from limiter import limiter
 
 
 ai_router = APIRouter()
@@ -113,11 +113,12 @@ class SimpleTodoAI:
 
 
 @ai_router.post("/todos", response_model=AITodoResponse)
-@limiter.limit("5/minute")
+@require_auth
+@rate_limit("5/minute")
 def generate_todos(
     request: AITodoRequest,
     db: Session = Depends(get_db_session),
-    user=Depends(get_current_user),
+    user: dict = Depends(get_current_user),
 ):
     user_id = user["user_id"]
     user_data = UserRepository.get_by_id(db, user_id)
@@ -178,9 +179,11 @@ def generate_todos(
 
 
 @ai_router.get("/plan")
+@require_auth
+@rate_limit("60/minute")
 def get_plan_info(
     db: Session = Depends(get_db_session),
-    user=Depends(get_current_user),
+    user: dict = Depends(get_current_user),
 ):
     user_id = user["user_id"]
     user_data = UserRepository.get_by_id(db, user_id)

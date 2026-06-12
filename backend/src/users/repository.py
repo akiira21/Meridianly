@@ -32,6 +32,9 @@ class UserRepository:
                     username=user.username,
                     email=user.email,
                     avatar_url=user.avatar_url,
+                    plan=user.plan.value,
+                    ai_requests_used=user.ai_requests_used,
+                    ai_requests_reset_at=user.ai_requests_reset_at,
                     created_at=user.created_at
                     ))
 
@@ -58,6 +61,9 @@ class UserRepository:
                     username=user.username,
                     email=user.email,
                     avatar_url=user.avatar_url,
+                    plan=user.plan.value,
+                    ai_requests_used=user.ai_requests_used,
+                    ai_requests_reset_at=user.ai_requests_reset_at,
                     created_at=user.created_at,
                 )
             return None
@@ -79,6 +85,9 @@ class UserRepository:
                         username=user.username,
                         email=user.email,
                         avatar_url=user.avatar_url,
+                        plan=user.plan.value,
+                        ai_requests_used=user.ai_requests_used,
+                        ai_requests_reset_at=user.ai_requests_reset_at,
                         created_at=user.created_at,
                     )
                 )
@@ -104,6 +113,9 @@ class UserRepository:
                         username=user.username,
                         email=user.email,
                         avatar_url=user.avatar_url,
+                        plan=user.plan.value,
+                        ai_requests_used=user.ai_requests_used,
+                        ai_requests_reset_at=user.ai_requests_reset_at,
                         created_at=user.created_at,
                     )
                 )
