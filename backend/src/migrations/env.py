@@ -15,6 +15,7 @@ from database import Base
 
 from users.models import Users
 from auth.models import Sessions
+from todos.models import Todo
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
