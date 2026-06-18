@@ -54,6 +54,12 @@ export default function Navbar() {
               >
                 Notes
               </Link>
+              <Link
+                href="/food"
+                className="text-sm font-body text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Food
+              </Link>
             </>
           )}
           <div className="h-4 w-px bg-border" />
@@ -125,6 +131,13 @@ export default function Navbar() {
                 onClick={() => setMobileOpen(false)}
               >
                 Notes
+              </Link>
+              <Link
+                href="/food"
+                className="block text-sm font-body text-muted-foreground hover:text-foreground transition-colors"
+                onClick={() => setMobileOpen(false)}
+              >
+                Food
               </Link>
             </>
           )}

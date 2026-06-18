@@ -246,6 +246,74 @@ export interface NoteUpdatePayload {
   color?: string;
 }
 
+export interface FoodPreset {
+  id: number;
+  name: string;
+  category: string;
+  calories_per_100g: number;
+  protein_per_100g: number;
+  carbs_per_100g: number;
+  fat_per_100g: number;
+  is_system: boolean;
+  user_id: number | null;
+  created_at: string;
+}
+
+export interface FoodPresetListResponse {
+  items: FoodPreset[];
+  total: number;
+}
+
+export interface FoodPresetCreatePayload {
+  name: string;
+  category?: string;
+  calories_per_100g: number;
+  protein_per_100g?: number;
+  carbs_per_100g?: number;
+  fat_per_100g?: number;
+}
+
+export interface FoodLog {
+  id: number;
+  user_id: number;
+  food_preset_id: number | null;
+  food_name: string;
+  amount_g: number;
+  calculated_calories: number;
+  calculated_protein: number;
+  calculated_carbs: number;
+  calculated_fat: number;
+  logged_at: string;
+}
+
+export interface FoodLogListResponse {
+  items: FoodLog[];
+  total: number;
+}
+
+export interface FoodLogCreatePayload {
+  food_preset_id?: number | null;
+  food_name: string;
+  amount_g: number;
+  calories: number;
+  protein?: number;
+  carbs?: number;
+  fat?: number;
+}
+
+export interface DailyNutritionSummary {
+  total_calories: number;
+  total_protein: number;
+  total_carbs: number;
+  total_fat: number;
+  entry_count: number;
+}
+
+export interface TodayFoodResponse {
+  logs: FoodLog[];
+  summary: DailyNutritionSummary;
+}
+
 export const api = {
   login: (payload: LoginPayload) =>
     axiosInstance.post<LoginResponse>("/api/v1/auth/login", payload),
@@ -343,6 +411,32 @@ export const api = {
 
   togglePinNote: (id: number) =>
     axiosInstance.post<Note>(`/api/v1/notes/${id}/pin`),
+
+  // Food
+  getFoodPresets: (category?: string) =>
+    axiosInstance.get<FoodPresetListResponse>("/api/v1/food/presets", {
+      params: category ? { category } : undefined,
+    }),
+
+  createFoodPreset: (payload: FoodPresetCreatePayload) =>
+    axiosInstance.post<FoodPreset>("/api/v1/food/presets", payload),
+
+  deleteFoodPreset: (id: number) =>
+    axiosInstance.delete(`/api/v1/food/presets/${id}`),
+
+  logFood: (payload: FoodLogCreatePayload) =>
+    axiosInstance.post<FoodLog>("/api/v1/food/log", payload),
+
+  getFoodToday: () =>
+    axiosInstance.get<TodayFoodResponse>("/api/v1/food/today"),
+
+  getFoodHistory: (limit?: number, offset?: number) =>
+    axiosInstance.get<FoodLogListResponse>("/api/v1/food/history", {
+      params: { limit, offset },
+    }),
+
+  deleteFoodLog: (id: number) =>
+    axiosInstance.delete(`/api/v1/food/log/${id}`),
 };
 
 export function setAccessToken(token: string) {

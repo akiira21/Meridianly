@@ -1,4 +1,5 @@
 import json
+import logging
 from typing import List
 
 from openai import OpenAI
@@ -7,9 +8,11 @@ from config import Config
 from todos.models import EnergyLevel, Context
 from todos.schemas import AITodoItem
 
+logger = logging.getLogger(__name__)
+
 
 class TodoLLMService:
-    """Real AI assistant using OpenAI API to generate structured todos from natural language."""
+    """AI assistant using OpenAI API to generate structured todos from natural language."""
 
     def __init__(self):
         self.client = OpenAI(api_key=Config.OPENAI_API_KEY) if Config.OPENAI_API_KEY else None
@@ -48,10 +51,9 @@ Return ONLY valid JSON in this exact format:
 """
 
     def generate_todos(self, prompt: str) -> List[AITodoItem]:
-        """Generate todos using OpenAI API."""
+        """Generate todos using OpenAI API. Raises if API key is not configured."""
         if not self.client:
-            # Fallback to keyword-based generation if no API key
-            return self._keyword_fallback(prompt)
+            raise RuntimeError("OpenAI API key is not configured")
 
         try:
             response = self.client.chat.completions.create(
@@ -94,7 +96,8 @@ Return ONLY valid JSON in this exact format:
 
             return result
 
-        except Exception:
+        except Exception as exc:
+            logger.error(f"OpenAI API error: {exc}")
             # Fallback to keyword-based on any error
             return self._keyword_fallback(prompt)
 

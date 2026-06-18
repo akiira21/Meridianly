@@ -4,7 +4,6 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/lib/auth-store";
 import { api, Todo, TodoStats } from "@/lib/api";
-import Link from "next/link";
 import {
   Check,
   Clock,
@@ -23,10 +22,9 @@ import {
   Inbox,
   Sun,
   Timer,
-  ChevronLeft,
 } from "lucide-react";
-import { ModeToggle } from "@/components/mode-toggle";
-import Logo from "@/components/logo";
+import PageHeader from "@/components/page-header";
+import Footer from "@/components/footer";
 import NumberStepper from "@/components/ui/number-stepper";
 
 export default function TodosPage() {
@@ -308,45 +306,28 @@ export default function TodosPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border">
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Link
-              href="/dashboard"
-              className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-muted hover:bg-muted/80 transition-colors"
-            >
-              <ChevronLeft size={16} />
-            </Link>
-            <Logo size="sm" href="/dashboard" />
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="hidden sm:block">
-              <ModeToggle />
-            </div>
-            <button
-              onClick={() => setShowAIModal(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-muted rounded-full font-body text-xs font-medium hover:bg-muted/80 transition-colors"
-            >
-              <Sparkles size={13} />
-              AI
-              {planInfo && planInfo.ai_requests_remaining <= 5 && (
-                <span className="w-1.5 h-1.5 bg-destructive rounded-full" />
-              )}
-            </button>
-            <button
-              onClick={() => setShowDoneForDay(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-muted rounded-full font-body text-xs font-medium hover:bg-muted/80 transition-colors"
-            >
-              <Moon size={13} />
-              <span className="hidden sm:inline">Done for day</span>
-            </button>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-background flex flex-col">
+      <PageHeader title="Todos" icon={<ListTodo size={18} />}>
+        <button
+          onClick={() => setShowAIModal(true)}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-muted rounded-full font-body text-xs font-medium hover:bg-muted/80 transition-colors"
+        >
+          <Sparkles size={13} />
+          AI
+          {planInfo && planInfo.ai_requests_remaining <= 5 && (
+            <span className="w-1.5 h-1.5 bg-destructive rounded-full" />
+          )}
+        </button>
+        <button
+          onClick={() => setShowDoneForDay(true)}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-muted rounded-full font-body text-xs font-medium hover:bg-muted/80 transition-colors"
+        >
+          <Moon size={13} />
+          <span className="hidden sm:inline">Done for day</span>
+        </button>
+      </PageHeader>
 
-      <main className="max-w-2xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+      <main className="max-w-2xl mx-auto px-4 sm:px-6 py-6 space-y-6 flex-1">
         {/* Stats Row */}
         {stats && (
           <div className="flex items-center gap-3 flex-wrap">
@@ -766,6 +747,7 @@ export default function TodosPage() {
           </div>
         </div>
       )}
+      <Footer />
     </div>
   );
 }

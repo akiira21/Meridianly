@@ -3,7 +3,7 @@ import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 interface LogoProps {
-  size?: "sm" | "md" | "lg";
+  size?: "xs" | "sm" | "md" | "lg";
   href?: string;
   className?: string;
   showText?: boolean;
@@ -16,6 +16,11 @@ export default function Logo({
   showText = true,
 }: LogoProps) {
   const sizes = {
+    xs: {
+      icon: 18,
+      iconBox: "w-5 h-5 rounded",
+      text: "text-xs",
+    },
     sm: {
       icon: 24,
       iconBox: "w-6 h-6 rounded-md",

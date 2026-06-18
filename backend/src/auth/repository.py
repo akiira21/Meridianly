@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime
+from datetime import UTC, datetime
 
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
@@ -49,7 +49,7 @@ class AuthRepository:
     @staticmethod
     def getUserSession(db, user_id):
         try:
-            now = datetime.now()
+            now = datetime.now(UTC)
             session = db.query(Sessions).filter(
                 Sessions.user_id == user_id,
                 Sessions.revoke_at.is_(None),
@@ -66,7 +66,7 @@ class AuthRepository:
     @staticmethod
     def getActiveSessions(db, user_id):
         try:
-            now = datetime.now()
+            now = datetime.now(UTC)
             sessions = db.query(Sessions).filter(
                 Sessions.user_id == user_id,
                 Sessions.revoke_at.is_(None),
@@ -85,7 +85,7 @@ class AuthRepository:
         try:
             session = db.query(Sessions).filter(Sessions.token == token).first()
             if session:
-                session.revoke_at = datetime.now()
+                session.revoke_at = datetime.now(UTC)
                 db.commit()
                 return True
             return False
@@ -105,7 +105,7 @@ class AuthRepository:
             ).first()
 
             if session:
-                session.revoke_at = datetime.now()
+                session.revoke_at = datetime.now(UTC)
                 db.commit()
                 return True
             return False

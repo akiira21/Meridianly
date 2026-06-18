@@ -11,9 +11,10 @@ import {
   Sparkles,
   Zap,
   FileText,
+  Utensils,
 } from "lucide-react";
-import Logo from "@/components/logo";
-import { ModeToggle } from "@/components/mode-toggle";
+import PageHeader from "@/components/page-header";
+import Footer from "@/components/footer";
 import AppleBento from "@/components/ui/apple-bento";
 import WaterBentoCard from "@/components/ui/water-bento-card";
 
@@ -27,6 +28,7 @@ export default function DashboardPage() {
   const [water, setWater] = useState<WaterDailySummary | null>(null);
   const [planInfo, setPlanInfo] = useState<UserPlanInfo | null>(null);
   const [notesCount, setNotesCount] = useState(0);
+  const [foodSummary, setFoodSummary] = useState<{ total_calories: number; entry_count: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -42,11 +44,12 @@ export default function DashboardPage() {
     async function load() {
       try {
         setLoading(true);
-        const [statsRes, waterRes, planRes, notesRes] = await Promise.allSettled([
+        const [statsRes, waterRes, planRes, notesRes, foodRes] = await Promise.allSettled([
           api.getStats(),
           api.getWaterToday(),
           api.getPlanInfo(),
           api.getNotes(),
+          api.getFoodToday(),
         ]);
 
         if (cancelled) return;
@@ -55,6 +58,7 @@ export default function DashboardPage() {
         if (waterRes.status === "fulfilled") setWater(waterRes.value.data.summary);
         if (planRes.status === "fulfilled") setPlanInfo(planRes.value.data);
         if (notesRes.status === "fulfilled") setNotesCount(notesRes.value.data.total);
+        if (foodRes.status === "fulfilled") setFoodSummary(foodRes.value.data.summary);
         setError(null);
       } catch (err) {
         if (!cancelled) {
@@ -87,20 +91,10 @@ export default function DashboardPage() {
   const displayName = user?.name || user?.username || user?.email?.split("@")[0] || "there";
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border">
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-          <Logo size="sm" href="/dashboard" />
-          <div className="flex items-center gap-3">
-            <span className="font-heading text-base font-semibold tracking-tight">
-              Dashboard
-            </span>
-            <ModeToggle />
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-background flex flex-col">
+      <PageHeader title="Dashboard" icon={<Sparkles size={18} />} showBack={false} />
 
-      <main className="max-w-2xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+      <main className="max-w-2xl mx-auto px-4 sm:px-6 py-8 space-y-8 flex-1 w-full">
         {error && (
           <div className="text-sm text-destructive font-body text-center py-2">
             {error}
@@ -150,16 +144,16 @@ export default function DashboardPage() {
                     description: `${stats?.active ?? 0} active, ${stats?.completed_today ?? 0} done today`,
                     href: "/todos",
                   },
-                  {
-                    size: "small",
-                    variant: "text",
-                    icon: Sparkles,
-                    title: "AI",
-                    description: planInfo
-                      ? `${planInfo.ai_requests_remaining} / ${planInfo.ai_requests_limit} left`
-                      : "Generate todos",
-                    href: "/todos",
-                  },
+                  // {
+                  //   size: "small",
+                  //   variant: "text",
+                  //   icon: Sparkles,
+                  //   title: "AI",
+                  //   description: planInfo
+                  //     ? `${planInfo.ai_requests_remaining} / ${planInfo.ai_requests_limit} left`
+                  //     : "Generate todos",
+                  //   href: "/todos",
+                  // },
                   {
                     size: "small",
                     variant: "text",
@@ -167,6 +161,16 @@ export default function DashboardPage() {
                     title: "Notes",
                     description: `${notesCount} saved`,
                     href: "/notes",
+                  },
+                  {
+                    size: "small",
+                    variant: "text",
+                    icon: Utensils,
+                    title: "Food",
+                    description: foodSummary
+                      ? `${Math.round(foodSummary.total_calories)} kcal`
+                      : "Track meals",
+                    href: "/food",
                   },
                 ]}
               />
@@ -198,11 +202,17 @@ export default function DashboardPage() {
                   value={notesCount}
                   label="Notes"
                 />
+                <SnapshotItem
+                  icon={Utensils}
+                  value={foodSummary ? `${Math.round(foodSummary.total_calories)}` : 0}
+                  label="Calories"
+                />
               </div>
             </div>
           </>
         )}
       </main>
+      <Footer />
     </div>
   );
 }

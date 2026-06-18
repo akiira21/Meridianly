@@ -1,8 +1,13 @@
 from datetime import UTC, datetime, timedelta
+import re
+import uuid
 import bcrypt
 import hashlib
 import ipaddress
 import jwt
+
+EMAIL_REGEX = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
 
 def generate_hash(password: str):
     salt = bcrypt.gensalt()
@@ -17,7 +22,10 @@ def verify_password(password, hash_password) -> bool:
 
 
 def hash_ip(ip_address: str) -> bytes:
-    packed = ipaddress.ip_address(ip_address).packed
+    try:
+        packed = ipaddress.ip_address(ip_address).packed
+    except ValueError:
+        packed = ip_address.encode("utf-8")
     return hashlib.sha256(packed).digest()[:16]
 
 
@@ -26,9 +34,10 @@ def serialise_email(email):
         return None
 
     email = email.replace(" ", "")
-    serialised_email = email.lower()
+    if not EMAIL_REGEX.match(email):
+        return None
 
-    return serialised_email
+    return email.lower()
 
 def generate_access_token(data: dict, expire_delta: int, SECRET_KEY: str):
     to_encode = data.copy()
@@ -41,7 +50,7 @@ def generate_access_token(data: dict, expire_delta: int, SECRET_KEY: str):
 def generate_refresh_token(data: dict, expire_delta: int, SECRET_KEY: str):
     to_encode = data.copy()
     expire = datetime.now(UTC) + timedelta(days=expire_delta)
-    to_encode.update({"exp": expire})
+    to_encode.update({"exp": expire, "jti": str(uuid.uuid4())})
 
     encoded = jwt.encode(to_encode, SECRET_KEY, algorithm='HS256')
     return encoded, expire

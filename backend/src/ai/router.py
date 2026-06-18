@@ -1,24 +1,23 @@
+from datetime import datetime, timedelta, UTC
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from auth.dependencies import get_current_user
 from database import get_db_session
-from middleware.decorators import require_auth, require_plan, rate_limit
-from todos.models import EnergyLevel, Context, TodoStatus
-from todos.schemas import AITodoRequest, AITodoResponse, AITodoItem, TodoCreateRequest
+from middleware.decorators import require_auth, rate_limit
+from todos.schemas import AITodoRequest, AITodoResponse, TodoCreateRequest
 from todos.services import TodoService
-from users.repository import UserRepository
-from users.models import UserPlan
+from users.models import UserPlan, Users
 
 
 ai_router = APIRouter()
 
-
-# Plan-based rate limits
+# Daily AI request limits by plan
 PLAN_LIMITS = {
-    UserPlan.FREE: 25,
+    UserPlan.FREE: 5,
     UserPlan.MID: 100,
-    UserPlan.MAX: 500,
+    UserPlan.MAX: 100,
 }
 
 
@@ -26,6 +25,24 @@ from ai.services import TodoLLMService
 
 
 ai_service = TodoLLMService()
+
+
+def _get_or_reset_daily_quota(user: Users, db: Session) -> tuple[int, int]:
+    """Return (used, limit) after handling daily reset."""
+    now = datetime.now()  # naive datetime to match DB storage
+    plan = user.plan if isinstance(user.plan, UserPlan) else UserPlan(user.plan)
+    limit = PLAN_LIMITS.get(plan, 5)
+
+    if user.ai_requests_reset_at:
+        if now >= user.ai_requests_reset_at:
+            user.ai_requests_used = 0
+            user.ai_requests_reset_at = now + timedelta(days=1)
+            db.commit()
+    else:
+        user.ai_requests_reset_at = now + timedelta(days=1)
+        db.commit()
+
+    return user.ai_requests_used, limit
 
 
 @ai_router.post("/todos", response_model=AITodoResponse)
@@ -37,36 +54,24 @@ def generate_todos(
     user: dict = Depends(get_current_user),
 ):
     user_id = user["user_id"]
-    user_data = UserRepository.get_by_id(db, user_id)
+    user_data = db.query(Users).filter(Users.id == user_id).first()
 
     if not user_data:
         raise HTTPException(status_code=404, detail="User not found")
 
-    # Check monthly reset
-    from datetime import datetime, timedelta
-    now = datetime.now()
-    if user_data.ai_requests_reset_at and now > user_data.ai_requests_reset_at:
-        user_data.ai_requests_used = 0
-        user_data.ai_requests_reset_at = now + timedelta(days=30)
-        db.commit()
+    used, limit = _get_or_reset_daily_quota(user_data, db)
 
-    # Check rate limit
-    plan = user_data.plan or UserPlan.FREE
-    limit = PLAN_LIMITS.get(plan, 25)
-
-    if user_data.ai_requests_used >= limit:
+    if used >= limit:
         raise HTTPException(
             status_code=429,
-            detail=f"AI request limit reached for {plan.value} plan. Limit: {limit}/month",
+            detail=f"Daily AI request limit reached ({limit}/day). Upgrade your plan for more requests.",
         )
 
-    # Generate todos using LLM (with fallback)
+    # Generate todos using OpenAI API
     generated = ai_service.generate_todos(data.prompt)
 
     # Increment usage
     user_data.ai_requests_used += 1
-    if not user_data.ai_requests_reset_at:
-        user_data.ai_requests_reset_at = now + timedelta(days=30)
     db.commit()
 
     # Create todos directly
@@ -102,18 +107,17 @@ def get_plan_info(
     user: dict = Depends(get_current_user),
 ):
     user_id = user["user_id"]
-    user_data = UserRepository.get_by_id(db, user_id)
+    user_data = db.query(Users).filter(Users.id == user_id).first()
 
     if not user_data:
         raise HTTPException(status_code=404, detail="User not found")
 
-    plan = user_data.plan or UserPlan.FREE
-    limit = PLAN_LIMITS.get(plan, 25)
-    used = user_data.ai_requests_used or 0
+    used, limit = _get_or_reset_daily_quota(user_data, db)
     remaining = max(0, limit - used)
+    plan_value = user_data.plan.value if isinstance(user_data.plan, UserPlan) else user_data.plan
 
     return {
-        "plan": plan.value,
+        "plan": plan_value,
         "ai_requests_used": used,
         "ai_requests_limit": limit,
         "ai_requests_remaining": remaining,

@@ -1,7 +1,5 @@
 from fastapi import HTTPException
-from datetime import datetime
-
-from auth.schemas import LoginRequestModel, AuthTokenResponse, LoginTokenServiceResponse
+from auth.schemas import LoginRequestModel, LoginTokenServiceResponse
 from auth.repository import AuthRepository
 from utils.auth import generate_access_token, generate_refresh_token, decode_token, serialise_email
 from users.repository import UserRepository
@@ -71,6 +69,9 @@ class AuthService:
         user = UserRepository.get_by_id(db, int(user_id))
         if not user:
             return None
+
+        # Revoke old session before creating new one to avoid token collision
+        AuthRepository.revokeSession(db, token)
 
         token_payload = {"user_id": str(user_id)}
         new_refresh_token, expire = generate_refresh_token(token_payload, config.REFRESH_TOKEN_EXPIRE, config.JWT_SECRET)

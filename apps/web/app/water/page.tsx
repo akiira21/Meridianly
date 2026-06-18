@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/lib/auth-store";
 import { api, WaterIntake, WaterDailySummary } from "@/lib/api";
-import { Droplets, Plus, Trash2, History, ChevronLeft } from "lucide-react";
-import Link from "next/link";
-import Logo from "@/components/logo";
+import { Droplets, Plus, Trash2, History } from "lucide-react";
+import PageHeader from "@/components/page-header";
+import Footer from "@/components/footer";
 import NumberStepper from "@/components/ui/number-stepper";
 import WaterBentoCard from "@/components/ui/water-bento-card";
 
@@ -86,26 +86,10 @@ export default function WaterPage() {
   const goal = summary?.goal_ml ?? 2500;
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border">
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Link
-              href="/dashboard"
-              className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-muted hover:bg-muted/80 transition-colors"
-            >
-              <ChevronLeft size={16} />
-            </Link>
-            <Logo size="sm" href="/dashboard" />
-          </div>
-          <div className="flex items-center gap-2">
-            <Droplets size={18} className="text-blue-500" />
-            <span className="font-heading text-base font-semibold tracking-tight">Water</span>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-background flex flex-col">
+      <PageHeader title="Water" icon={<Droplets size={18} className="text-blue-500" />} />
 
-      <main className="max-w-2xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+      <main className="max-w-2xl mx-auto px-4 sm:px-6 py-8 space-y-8 flex-1">
         {error && (
           <div className="text-sm text-destructive font-body text-center py-2">
             {error}
@@ -130,7 +114,7 @@ export default function WaterPage() {
               <button
                 key={amount}
                 onClick={() => logWater(amount)}
-                className="flex flex-col items-center gap-2 p-3 bg-muted rounded-xl hover:bg-muted/80 transition-colors"
+                className="flex flex-col cursor-pointer items-center gap-2 p-3 bg-muted rounded-xl hover:bg-muted/80 transition-colors"
               >
                 <Plus size={16} className="text-blue-500" />
                 <span className="font-body text-xs font-medium">{amount}ml</span>
@@ -149,7 +133,7 @@ export default function WaterPage() {
             <button
               onClick={handleCustomAdd}
               disabled={!customAmount || customAmount <= 0}
-              className="px-4 py-2 bg-foreground text-background rounded-full font-body text-xs font-medium hover:opacity-80 transition-opacity disabled:opacity-50"
+              className="px-4 py-2 cursor-pointer bg-foreground text-background rounded-full font-body text-xs font-medium hover:opacity-80 transition-opacity disabled:opacity-50"
             >
               Add
             </button>
@@ -206,6 +190,7 @@ export default function WaterPage() {
           )}
         </div>
       </main>
+      <Footer />
     </div>
   );
 }

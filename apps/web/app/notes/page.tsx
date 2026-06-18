@@ -13,11 +13,9 @@ import {
   X,
   Eye,
   Pencil,
-  ChevronLeft,
 } from "lucide-react";
-import Link from "next/link";
-import Logo from "@/components/logo";
-import { ModeToggle } from "@/components/mode-toggle";
+import PageHeader from "@/components/page-header";
+import Footer from "@/components/footer";
 import NotionEditor from "@/components/ui/notion-editor";
 import MarkdownPreview from "@/components/ui/markdown-preview";
 import NoteColorPicker, { getNoteColorClasses } from "@/components/ui/note-color-picker";
@@ -150,29 +148,10 @@ export default function NotesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border">
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Link
-              href="/dashboard"
-              className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-muted hover:bg-muted/80 transition-colors"
-            >
-              <ChevronLeft size={16} />
-            </Link>
-            <Logo size="sm" href="/dashboard" />
-          </div>
-          <div className="flex items-center gap-3">
-            <FileText size={18} className="text-foreground" />
-            <span className="font-heading text-base font-semibold tracking-tight">
-              Notes
-            </span>
-            <ModeToggle />
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-background flex flex-col">
+      <PageHeader title="Notes" icon={<FileText size={18} />} />
 
-      <main className="max-w-2xl mx-auto px-4 sm:px-6 py-8 space-y-6">
+      <main className="max-w-2xl mx-auto px-4 sm:px-6 py-8 space-y-6 flex-1">
         {error && (
           <div className="text-sm text-destructive font-body text-center py-2">
             {error}
@@ -359,6 +338,7 @@ export default function NotesPage() {
           </div>
         </div>
       )}
+      <Footer />
     </div>
   );
 }
