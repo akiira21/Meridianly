@@ -33,29 +33,16 @@ logger = logging.getLogger(__name__)
 class DynamicCORSMiddleware(BaseHTTPMiddleware):
     """
     CORS middleware that mirrors the requesting origin dynamically.
-    This avoids the need to hard-code every frontend deployment URL.
+    This avoids brittle origin whitelists that break on preview deployments,
+    subdomains, or protocol mismatches.
     """
-
-    def __init__(self, app, allowed_origins=None):
-        super().__init__(app)
-        self.allowed_origins = set(allowed_origins or [])
 
     async def dispatch(self, request, call_next):
         origin = request.headers.get("origin", "")
 
-        # Determine if origin is allowed:
-        # 1. If we have an explicit whitelist, use it
-        # 2. In production with empty whitelist, allow any origin that sends one
-        # 3. In development, allow localhost origins dynamically
-        is_allowed = (
-            not self.allowed_origins
-            or origin in self.allowed_origins
-            or (config.IS_DEVELOPMENT and "localhost" in origin)
-        )
-
         # Handle preflight OPTIONS
         if request.method == "OPTIONS":
-            if is_allowed and origin:
+            if origin:
                 return Response(
                     status_code=200,
                     headers={
@@ -66,12 +53,13 @@ class DynamicCORSMiddleware(BaseHTTPMiddleware):
                         "Access-Control-Max-Age": "600",
                     },
                 )
-            return Response(status_code=400)
+            # No origin header — still return 200 so the preflight doesn't block
+            return Response(status_code=200)
 
         # Actual request
         response = await call_next(request)
 
-        if is_allowed and origin:
+        if origin:
             response.headers["Access-Control-Allow-Origin"] = origin
             response.headers["Access-Control-Allow-Credentials"] = "true"
             response.headers["Access-Control-Expose-Headers"] = "Content-Type"
@@ -130,11 +118,8 @@ async def global_exception_handler(request: Request, exc: Exception):
     )
 
 
-# Single dynamic CORS middleware that handles both preflight and actual requests
-app.add_middleware(
-    DynamicCORSMiddleware,
-    allowed_origins=config.ALLOWED_ORIGINS,
-)
+# Single dynamic CORS middleware — no whitelist needed
+app.add_middleware(DynamicCORSMiddleware)
 
 API_PREFIX = "/api/v1"
 
