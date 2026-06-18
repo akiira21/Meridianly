@@ -5,7 +5,6 @@ from contextlib import asynccontextmanager
 from config import Config
 from database import db
 from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
@@ -31,22 +30,53 @@ else:
 logger = logging.getLogger(__name__)
 
 
-class OptionsBypassMiddleware(BaseHTTPMiddleware):
-    """Intercept OPTIONS requests and return 200 before they hit CORS/rate-limiting layers."""
+class DynamicCORSMiddleware(BaseHTTPMiddleware):
+    """
+    CORS middleware that mirrors the requesting origin dynamically.
+    This avoids the need to hard-code every frontend deployment URL.
+    """
+
+    def __init__(self, app, allowed_origins=None):
+        super().__init__(app)
+        self.allowed_origins = set(allowed_origins or [])
 
     async def dispatch(self, request, call_next):
+        origin = request.headers.get("origin", "")
+
+        # Determine if origin is allowed:
+        # 1. If we have an explicit whitelist, use it
+        # 2. In production with empty whitelist, allow any origin that sends one
+        # 3. In development, allow localhost origins dynamically
+        is_allowed = (
+            not self.allowed_origins
+            or origin in self.allowed_origins
+            or (config.IS_DEVELOPMENT and "localhost" in origin)
+        )
+
+        # Handle preflight OPTIONS
         if request.method == "OPTIONS":
-            origin = request.headers.get("origin", "*")
-            return Response(
-                status_code=200,
-                headers={
-                    "Access-Control-Allow-Origin": origin,
-                    "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
-                    "Access-Control-Allow-Headers": "Content-Type, Authorization",
-                    "Access-Control-Allow-Credentials": "true",
-                },
-            )
-        return await call_next(request)
+            if is_allowed and origin:
+                return Response(
+                    status_code=200,
+                    headers={
+                        "Access-Control-Allow-Origin": origin,
+                        "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+                        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+                        "Access-Control-Allow-Credentials": "true",
+                        "Access-Control-Max-Age": "600",
+                    },
+                )
+            return Response(status_code=400)
+
+        # Actual request
+        response = await call_next(request)
+
+        if is_allowed and origin:
+            response.headers["Access-Control-Allow-Origin"] = origin
+            response.headers["Access-Control-Allow-Credentials"] = "true"
+            response.headers["Access-Control-Expose-Headers"] = "Content-Type"
+
+        return response
 
 
 @asynccontextmanager
@@ -100,16 +130,11 @@ async def global_exception_handler(request: Request, exc: Exception):
     )
 
 
+# Single dynamic CORS middleware that handles both preflight and actual requests
 app.add_middleware(
-    CORSMiddleware,
-    allow_origins=config.ALLOWED_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allow_headers=["Content-Type", "Authorization"],
+    DynamicCORSMiddleware,
+    allowed_origins=config.ALLOWED_ORIGINS,
 )
-
-# Run before CORSMiddleware so OPTIONS are handled cleanly even when origins mismatch
-app.add_middleware(OptionsBypassMiddleware)
 
 API_PREFIX = "/api/v1"
 
