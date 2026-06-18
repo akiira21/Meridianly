@@ -7,6 +7,23 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
+def _normalize_database_url(url: str) -> str:
+    """Normalize DATABASE_URL for SQLAlchemy + Neon compatibility."""
+    # Railway/Neon sometimes provide postgres:// instead of postgresql://
+    if url.startswith("postgres://"):
+        url = url.replace("postgres://", "postgresql+psycopg2://", 1)
+    elif url.startswith("postgresql://") and not url.startswith("postgresql+"):
+        url = url.replace("postgresql://", "postgresql+psycopg2://", 1)
+
+    # Neon requires SSL
+    if ".neon.tech" in url and "sslmode=" not in url:
+        separator = "&" if "?" in url else "?"
+        url = f"{url}{separator}sslmode=require"
+
+    return url
+
+
 @dataclass
 class Config:
     ENVIRONMENT: str = os.getenv("ENV", "development")
@@ -29,6 +46,7 @@ class Config:
         if not self.DATABASE_URL:
             print("ERROR: DATABASE_URL is required.", file=sys.stderr)
             sys.exit(1)
+        self.DATABASE_URL = _normalize_database_url(self.DATABASE_URL)
 
     @property
     def ALLOWED_ORIGINS(self) -> List[str]:

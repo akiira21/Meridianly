@@ -18,6 +18,7 @@ from auth.models import Sessions
 from todos.models import Todo
 from water.models import WaterIntake
 from notes.models import Note
+from food.models import FoodPreset, FoodLog
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
