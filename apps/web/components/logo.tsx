@@ -45,7 +45,7 @@ export default function Logo({
       <div className={cn("flex items-center justify-center shrink-0", s.iconBox)}>
         <Image
           src="/logo.svg"
-          alt="Meridian logo"
+          alt="Meridianly logo"
           width={s.icon}
           height={s.icon}
           className="h-full w-full"
@@ -53,7 +53,7 @@ export default function Logo({
       </div>
       {showText && (
         <span className={cn("font-heading font-semibold tracking-tight", s.text)}>
-          Meridian
+          Meridianly
         </span>
       )}
     </div>

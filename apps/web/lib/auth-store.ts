@@ -208,7 +208,7 @@ export const useAuthStore = create<AuthState>()(
       },
     }),
     {
-      name: "meridian-auth",
+      name: "meridianly-auth",
       partialize: (state) => ({ user: state.user, isAuthenticated: state.isAuthenticated }),
       onRehydrateStorage: () => (state) => {
         if (state) {

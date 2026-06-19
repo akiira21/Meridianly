@@ -9,7 +9,7 @@ export default function Footer() {
       <div className="max-w-2xl mx-auto px-4 sm:px-6 h-12 flex items-center justify-between">
         <Logo size="xs" href="/dashboard" />
         <p className="text-xs text-muted-foreground font-body">
-          &copy; {year} Meridian. All rights reserved.
+          &copy; {year} Meridianly. All rights reserved.
         </p>
       </div>
     </footer>

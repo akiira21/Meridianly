@@ -44,9 +44,9 @@ const itemVariants = {
 };
 
 const modalVariants = {
-  hidden: { opacity: 0, scale: 0.95, y: 10 },
+  hidden: { opacity: 0, scale: 0.96, y: 8 },
   show: { opacity: 1, scale: 1, y: 0 },
-  exit: { opacity: 0, scale: 0.95, y: 10 },
+  exit: { opacity: 0, scale: 0.96, y: 8 },
 };
 
 const backdropVariants = {
@@ -388,7 +388,6 @@ export default function TodosPage() {
 
         {/* Compose Area - Big inline text area */}
         <motion.div
-          layout
           className="bg-card border border-border rounded-2xl p-4 sm:p-5 focus-within:border-foreground/20 transition-colors"
         >
           <textarea
@@ -543,7 +542,7 @@ export default function TodosPage() {
                   <motion.div
                     layoutId="activeFilter"
                     className="absolute inset-0 bg-foreground rounded-xl"
-                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                    transition={{ duration: 0.2, ease: "easeOut" }}
                   />
                 )}
                 <span className="relative z-10 flex items-center gap-1.5">
@@ -622,7 +621,7 @@ export default function TodosPage() {
           animate="show"
           className="space-y-2"
         >
-          <AnimatePresence mode="popLayout">
+          <AnimatePresence>
             {todos.map((todo) => {
               const eCfg = energyConfig[todo.energy_level];
               const cCfg = contextConfig[todo.context];
@@ -630,12 +629,11 @@ export default function TodosPage() {
               return (
                 <motion.div
                   key={todo.id}
-                  layout
                   variants={itemVariants}
                   initial="hidden"
                   animate="show"
-                  exit={{ opacity: 0, x: -20, scale: 0.95 }}
-                  transition={{ type: "spring", stiffness: 500, damping: 35 }}
+                  exit={{ opacity: 0, scale: 0.96 }}
+                  transition={{ duration: 0.2 }}
                   className={`group flex items-start gap-3 p-4 bg-card border border-border rounded-2xl hover:border-foreground/20 transition-colors ${
                     todo.status === "completed" ? "opacity-50" : ""
                   }`}
@@ -723,7 +721,7 @@ export default function TodosPage() {
               initial="hidden"
               animate="show"
               exit="exit"
-              transition={{ type: "spring", stiffness: 400, damping: 30 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
               onClick={(e) => e.stopPropagation()}
               className="w-full max-w-md bg-card border border-border rounded-2xl p-6 shadow-lg"
             >
@@ -792,7 +790,7 @@ export default function TodosPage() {
               initial="hidden"
               animate="show"
               exit="exit"
-              transition={{ type: "spring", stiffness: 400, damping: 30 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
               onClick={(e) => e.stopPropagation()}
               className="w-full max-w-sm bg-card border border-border rounded-2xl p-6 shadow-lg text-center"
             >
@@ -836,7 +834,7 @@ export default function TodosPage() {
               initial="hidden"
               animate="show"
               exit="exit"
-              transition={{ type: "spring", stiffness: 400, damping: 30 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
               onClick={(e) => e.stopPropagation()}
               className="w-full max-w-sm bg-card border border-border rounded-2xl p-6 shadow-lg text-center"
             >

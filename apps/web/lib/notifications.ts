@@ -12,7 +12,7 @@ export interface NotificationSettings {
   lastMealReminderDate: string | null;
 }
 
-const STORAGE_KEY = "meridian-notifications";
+const STORAGE_KEY = "meridianly-notifications";
 
 const DEFAULT_SETTINGS: NotificationSettings = {
   enabled: false,

@@ -20,11 +20,11 @@ const headingFont = Sora({
 
 export const metadata: Metadata = {
   title: {
-    default: "Meridian — Personal Life Manager",
-    template: "%s | Meridian",
+    default: "Meridianly — Personal Life Manager",
+    template: "%s | Meridianly",
   },
   description:
-    "Meridian is a minimal personal life manager for tracking water, todos, food, and notes. Stay organized, hydrated, and focused.",
+    "Meridianly is a minimal personal life manager for tracking water, todos, food, and notes. Stay organized, hydrated, and focused.",
   keywords: [
     "productivity",
     "todo app",
@@ -34,19 +34,19 @@ export const metadata: Metadata = {
     "personal organizer",
     "habit tracker",
   ],
-  authors: [{ name: "Meridian" }],
-  creator: "Meridian",
+  authors: [{ name: "Meridianly" }],
+  creator: "Meridianly",
   openGraph: {
-    title: "Meridian — Personal Life Manager",
+    title: "Meridianly — Personal Life Manager",
     description:
       "Track your water, todos, food, and notes in one calm, minimal space.",
-    siteName: "Meridian",
+    siteName: "Meridianly",
     locale: "en_US",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Meridian — Personal Life Manager",
+    title: "Meridianly — Personal Life Manager",
     description:
       "Track your water, todos, food, and notes in one calm, minimal space.",
   },

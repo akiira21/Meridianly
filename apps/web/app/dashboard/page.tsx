@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/lib/auth-store";
-import { api, TodoStats, WaterDailySummary, UserPlanInfo } from "@/lib/api";
+import { api, TodoStats, WaterDailySummary } from "@/lib/api";
 import {
   Check,
   Droplets,
@@ -15,8 +15,10 @@ import {
 } from "lucide-react";
 import PageHeader from "@/components/page-header";
 import Footer from "@/components/footer";
+import UserMenu from "@/components/user-menu";
 import AppleBento from "@/components/ui/apple-bento";
 import WaterBentoCard from "@/components/ui/water-bento-card";
+import SnapshotItem from "@/components/dashboard/snapshot-item";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -26,7 +28,6 @@ export default function DashboardPage() {
 
   const [stats, setStats] = useState<TodoStats | null>(null);
   const [water, setWater] = useState<WaterDailySummary | null>(null);
-  const [planInfo, setPlanInfo] = useState<UserPlanInfo | null>(null);
   const [notesCount, setNotesCount] = useState(0);
   const [foodSummary, setFoodSummary] = useState<{ total_calories: number; entry_count: number } | null>(null);
   const [loading, setLoading] = useState(true);
@@ -44,10 +45,9 @@ export default function DashboardPage() {
     async function load() {
       try {
         setLoading(true);
-        const [statsRes, waterRes, planRes, notesRes, foodRes] = await Promise.allSettled([
+        const [statsRes, waterRes, notesRes, foodRes] = await Promise.allSettled([
           api.getStats(),
           api.getWaterToday(),
-          api.getPlanInfo(),
           api.getNotes(),
           api.getFoodToday(),
         ]);
@@ -56,7 +56,6 @@ export default function DashboardPage() {
 
         if (statsRes.status === "fulfilled") setStats(statsRes.value.data);
         if (waterRes.status === "fulfilled") setWater(waterRes.value.data.summary);
-        if (planRes.status === "fulfilled") setPlanInfo(planRes.value.data);
         if (notesRes.status === "fulfilled") setNotesCount(notesRes.value.data.total);
         if (foodRes.status === "fulfilled") setFoodSummary(foodRes.value.data.summary);
         setError(null);
@@ -92,7 +91,9 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <PageHeader title="Dashboard" icon={<Sparkles size={18} />} showBack={false} />
+      <PageHeader title="Dashboard" icon={<Sparkles size={18} />} showBack={false}>
+        <UserMenu />
+      </PageHeader>
 
       <main className="max-w-2xl mx-auto px-4 sm:px-6 py-8 space-y-8 flex-1 w-full">
         {error && (
@@ -217,20 +218,3 @@ export default function DashboardPage() {
   );
 }
 
-function SnapshotItem({
-  icon: Icon,
-  value,
-  label,
-}: {
-  icon: React.ElementType;
-  value: string | number;
-  label: string;
-}) {
-  return (
-    <div className="text-center p-3 bg-muted/50 rounded-xl">
-      <Icon size={16} className="mx-auto mb-2 text-muted-foreground" />
-      <div className="font-heading text-xl font-medium tracking-tight">{value}</div>
-      <div className="text-xs text-muted-foreground font-body mt-0.5">{label}</div>
-    </div>
-  );
-}

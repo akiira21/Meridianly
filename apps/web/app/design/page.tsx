@@ -78,7 +78,7 @@ export default function DesignPage() {
               Design System
             </h1>
             <p className="mt-3 text-muted-foreground font-body max-w-lg">
-              Universal components and styles for Meridian. Built with Tailwind CSS,
+              Universal components and styles for Meridianly. Built with Tailwind CSS,
               Radix UI, and minimal intention.
             </p>
           </div>
@@ -327,13 +327,13 @@ export default function DesignPage() {
           <div className="flex items-center gap-6">
             <label className="relative inline-flex items-center cursor-pointer">
               <input type="checkbox" className="sr-only peer" defaultChecked />
-              <div className="w-11 h-6 bg-muted peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-ring rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-foreground" />
+              <div className="w-11 h-6 bg-muted peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-ring rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-foreground" />
               <span className="ml-3 font-body text-sm">Notifications</span>
             </label>
 
             <label className="relative inline-flex items-center cursor-pointer">
               <input type="checkbox" className="sr-only peer" />
-              <div className="w-11 h-6 bg-muted peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-ring rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-foreground" />
+              <div className="w-11 h-6 bg-muted peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-ring rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-foreground" />
               <span className="ml-3 font-body text-sm">Dark Mode</span>
             </label>
           </div>
@@ -591,7 +591,7 @@ export default function DesignPage() {
                 Feature Notes
               </h4>
               <CollapsibleText
-                text="Meridian helps you track water intake, manage todos, set reminders, schedule events, scan food for calories, and jot quick notes. Everything syncs across your devices. Built with privacy in mind — your data stays on your device unless you explicitly enable cloud backup."
+                text="Meridianly helps you track water intake, manage todos, set reminders, schedule events, scan food for calories, and jot quick notes. Everything syncs across your devices. Built with privacy in mind — your data stays on your device unless you explicitly enable cloud backup."
                 maxLength={100}
               />
             </div>
@@ -607,7 +607,7 @@ export default function DesignPage() {
               name="Sarah Chen"
               handle="@sarahbuilds"
               date="Jun 1"
-              text="Meridian completely changed how I organize my day. The water tracker keeps me hydrated and the minimal UI is so calming."
+              text="Meridianly completely changed how I organize my day. The water tracker keeps me hydrated and the minimal UI is so calming."
               likes={124}
               replies={18}
               reposts={32}
@@ -625,7 +625,7 @@ export default function DesignPage() {
               name="Aisha Patel"
               handle="@aishatech"
               date="May 25"
-              text="I switched from five different apps to just Meridian. Todos, reminders, events, and notes all in one calm space."
+              text="I switched from five different apps to just Meridianly. Todos, reminders, events, and notes all in one calm space."
               likes={256}
               replies={42}
               reposts={67}
@@ -650,19 +650,19 @@ export default function DesignPage() {
             <FaqAccordion
               items={[
                 {
-                  question: "How does Meridian keep my data private?",
+                  question: "How does Meridianly keep my data private?",
                   answer:
                     "All your data is stored locally on your device by default. We use end-to-end encryption for any cloud backups. You own your data and can export or delete it at any time from your account settings.",
                 },
                 {
-                  question: "Can I use Meridian offline?",
+                  question: "Can I use Meridianly offline?",
                   answer:
-                    "Yes. As a PWA, Meridian works fully offline. All your todos, reminders, events, and notes are available even without an internet connection. Changes sync automatically when you're back online.",
+                    "Yes. As a PWA, Meridianly works fully offline. All your todos, reminders, events, and notes are available even without an internet connection. Changes sync automatically when you're back online.",
                 },
                 {
-                  question: "What platforms does Meridian support?",
+                  question: "What platforms does Meridianly support?",
                   answer:
-                    "Meridian runs on any modern browser. Install it as a PWA on iOS, Android, Windows, macOS, and Linux. One app, every device.",
+                    "Meridianly runs on any modern browser. Install it as a PWA on iOS, Android, Windows, macOS, and Linux. One app, every device.",
                 },
                 {
                   question: "How accurate is the food calorie scanner?",
@@ -670,9 +670,9 @@ export default function DesignPage() {
                     "Our AI model (MobileNetV3 trained on Food-101) identifies food items with high accuracy. Calorie data is then pulled from OpenFoodFacts for reliable nutritional information.",
                 },
                 {
-                  question: "Is Meridian free to use?",
+                  question: "Is Meridianly free to use?",
                   answer:
-                    "Yes. Meridian is completely free for personal use. All core features — water tracking, todos, reminders, events, notes, and food scanning — are available at no cost.",
+                    "Yes. Meridianly is completely free for personal use. All core features — water tracking, todos, reminders, events, notes, and food scanning — are available at no cost.",
                 },
               ]}
             />
@@ -860,7 +860,7 @@ export default function DesignPage() {
             <HeroImage
               src="https://images.unsplash.com/photo-1541701494587-cb58502866b0?w=1200&h=600&fit=crop&q=80"
               alt="Abstract colorful paint"
-              heading="Meridian"
+              heading="Meridianly"
               description="A personal life manager that respects your attention."
               variant="centered"
               aspect="landscape"
@@ -925,7 +925,7 @@ export default function DesignPage() {
       {/* Footer */}
       <footer className="px-6 py-10 max-w-5xl mx-auto border-t border-border">
         <p className="text-xs text-muted-foreground font-body">
-          Meridian Design System — Built with Next.js, Tailwind CSS, and Radix
+          Meridianly Design System — Built with Next.js, Tailwind CSS, and Radix
           UI.
         </p>
       </footer>

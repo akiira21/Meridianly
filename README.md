@@ -1,4 +1,4 @@
-# Meridian
+# Meridianly
 
 A personal life management app for tracking daily habits, tasks, nutrition, and notes. Built with a clean, minimal UI and mobile-first design.
 

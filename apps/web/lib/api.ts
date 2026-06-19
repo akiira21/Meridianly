@@ -13,7 +13,7 @@ export const axiosInstance: AxiosInstance = axios.create({
 
 axiosInstance.interceptors.request.use((config) => {
   if (typeof window !== "undefined") {
-    const token = localStorage.getItem("meridian_access_token");
+    const token = localStorage.getItem("meridianly_access_token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -42,12 +42,12 @@ axiosInstance.interceptors.response.use(
           {},
           { withCredentials: true }
         );
-        localStorage.setItem("meridian_access_token", data.access_token);
+        localStorage.setItem("meridianly_access_token", data.access_token);
         originalRequest.headers.Authorization = `Bearer ${data.access_token}`;
         return axiosInstance(originalRequest);
       } catch (refreshError) {
         // Refresh failed — clear token and redirect to login
-        localStorage.removeItem("meridian_access_token");
+        localStorage.removeItem("meridianly_access_token");
         if (typeof window !== "undefined") {
           window.location.href = "/login";
         }
@@ -474,19 +474,19 @@ export const api = {
 
 export function setAccessToken(token: string) {
   if (typeof window !== "undefined") {
-    localStorage.setItem("meridian_access_token", token);
+    localStorage.setItem("meridianly_access_token", token);
   }
 }
 
 export function clearAccessToken() {
   if (typeof window !== "undefined") {
-    localStorage.removeItem("meridian_access_token");
+    localStorage.removeItem("meridianly_access_token");
   }
 }
 
 export function getAccessToken(): string | null {
   if (typeof window !== "undefined") {
-    return localStorage.getItem("meridian_access_token");
+    return localStorage.getItem("meridianly_access_token");
   }
   return null;
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useNotifications, updateSettings } from "@/lib/notifications";
+import { useNotifications } from "@/lib/notifications";
 
 export default function NotificationProvider() {
   const { getSettings } = useNotifications();

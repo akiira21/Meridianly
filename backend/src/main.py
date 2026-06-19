@@ -78,7 +78,7 @@ async def lifespan(app: FastAPI):
     logger.info("Application shutting down")
 
 
-app = FastAPI(title="Meridian API", lifespan=lifespan)
+app = FastAPI(title="Meridianly API", lifespan=lifespan)
 app.state.limiter = limiter
 
 

@@ -66,7 +66,6 @@ export default function FoodPage() {
     total_fat: 0,
     entry_count: 0,
   });
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -88,7 +87,6 @@ export default function FoodPage() {
   }, [isAuthenticated, rehydrated, router]);
 
   const loadData = useCallback(async () => {
-    setLoading(true);
     try {
       const cat = selectedCategory === "all" ? undefined : selectedCategory;
       const [presetsRes, todayRes] = await Promise.all([
@@ -101,8 +99,6 @@ export default function FoodPage() {
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load data");
-    } finally {
-      setLoading(false);
     }
   }, [selectedCategory]);
 

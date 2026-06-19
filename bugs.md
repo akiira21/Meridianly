@@ -3,7 +3,7 @@
 
 Reported by users - 
 
-- [] Getting issue in setting name when sign up.
+- [x] Getting issue in setting name when sign up.
 - [] Update twitter and github links in footer with respective hrefs.
 
 

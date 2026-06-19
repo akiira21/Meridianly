@@ -24,10 +24,8 @@ import {
   Droplets,
   Utensils,
 } from "lucide-react";
-
-function getDicebearUrl(seed: string) {
-  return `https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(seed)}`;
-}
+import { getDicebearUrl } from "@/lib/avatar";
+import UserAvatar from "@/components/user-avatar";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -54,9 +52,9 @@ export default function ProfilePage() {
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [passwordSuccess, setPasswordSuccess] = useState(false);
 
-  const [notifEnabled, setNotifEnabled] = useState(false);
-  const [waterReminders, setWaterReminders] = useState(true);
-  const [mealReminders, setMealReminders] = useState(true);
+  const [notifEnabled, setNotifEnabled] = useState(() => getNotificationSettings().enabled);
+  const [waterReminders, setWaterReminders] = useState(() => getNotificationSettings().waterReminders);
+  const [mealReminders, setMealReminders] = useState(() => getNotificationSettings().mealReminders);
 
   useEffect(() => {
     if (!rehydrated) return;
@@ -73,13 +71,6 @@ export default function ProfilePage() {
       setAvatarUrl(user.avatar_url || getDicebearUrl(user.username));
     }
   }, [user]);
-
-  useEffect(() => {
-    const settings = getNotificationSettings();
-    setNotifEnabled(settings.enabled);
-    setWaterReminders(settings.waterReminders);
-    setMealReminders(settings.mealReminders);
-  }, []);
 
   async function handleSaveProfile() {
     setProfileError(null);
@@ -136,7 +127,7 @@ export default function ProfilePage() {
       if (permission === "granted") {
         setNotifEnabled(true);
         updateNotificationSettings({ enabled: true });
-        sendNotification("Meridian Notifications Enabled", {
+        sendNotification("Meridianly Notifications Enabled", {
           body: "You'll now receive reminders for water and meals!",
         });
       } else {
@@ -188,19 +179,7 @@ export default function ProfilePage() {
         >
           <div className="flex items-center gap-4">
             <div className="relative">
-              <div className="w-20 h-20 rounded-2xl bg-muted overflow-hidden border border-border">
-                {avatarUrl ? (
-                  <img
-                    src={avatarUrl}
-                    alt="avatar"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <User size={32} className="text-muted-foreground" />
-                  </div>
-                )}
-              </div>
+              <UserAvatar src={avatarUrl} name={user?.name || user?.username || "User"} size="lg" />
               <button
                 onClick={randomizeAvatar}
                 className="absolute -bottom-1 -right-1 p-1.5 bg-foreground text-background rounded-full hover:opacity-80 transition-opacity shadow-sm"
@@ -268,7 +247,7 @@ export default function ProfilePage() {
             <button
               onClick={handleSaveProfile}
               disabled={savingProfile}
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-foreground text-background rounded-full font-body text-sm font-medium hover:opacity-80 transition-opacity disabled:opacity-50"
+              className="inline-flex cursor-pointer items-center gap-2 px-5 py-2.5 bg-foreground text-background rounded-full font-body text-sm font-medium hover:opacity-80 transition-opacity disabled:opacity-50"
             >
               {savingProfile ? (
                 <span className="animate-gentle-pulse">Saving...</span>
@@ -306,7 +285,7 @@ export default function ProfilePage() {
               </div>
               <button
                 onClick={() => handleToggleNotifications(!notifEnabled)}
-                className={`relative w-11 h-6 rounded-full transition-colors ${
+                className={`relative w-11 h-6 rounded-full cursor-pointer transition-colors ${
                   notifEnabled ? "bg-foreground" : "bg-muted"
                 }`}
               >
@@ -333,7 +312,7 @@ export default function ProfilePage() {
                     </div>
                     <button
                       onClick={() => handleToggleWater(!waterReminders)}
-                      className={`relative w-9 h-5 rounded-full transition-colors ${
+                      className={`relative w-9 h-5 rounded-full cursor-pointer transition-colors ${
                         waterReminders ? "bg-foreground" : "bg-muted"
                       }`}
                     >
@@ -352,7 +331,7 @@ export default function ProfilePage() {
                     </div>
                     <button
                       onClick={() => handleToggleMeals(!mealReminders)}
-                      className={`relative w-9 h-5 rounded-full transition-colors ${
+                      className={`relative w-9 h-5 rounded-full cursor-pointer transition-colors ${
                         mealReminders ? "bg-foreground" : "bg-muted"
                       }`}
                     >
@@ -449,7 +428,7 @@ export default function ProfilePage() {
             <button
               onClick={handleChangePassword}
               disabled={changingPassword || !oldPassword || !newPassword || !confirmPassword}
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-foreground text-background rounded-full font-body text-sm font-medium hover:opacity-80 transition-opacity disabled:opacity-50"
+              className="inline-flex items-center cursor-pointer gap-2 px-5 py-2.5 bg-foreground text-background rounded-full font-body text-sm font-medium hover:opacity-80 transition-opacity disabled:opacity-50"
             >
               {changingPassword ? (
                 <span className="animate-gentle-pulse">Changing...</span>
