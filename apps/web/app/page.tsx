@@ -5,6 +5,7 @@ import { useAuthStore } from "@/lib/auth-store";
 import Navbar from "@/components/navbar";
 import FeatureCard from "@/components/feature-card";
 import MarketingFooter from "@/components/marketing-footer";
+import PricingSection from "@/components/pricing-section";
 import BentoGrid from "@/components/ui/bento-grid";
 import {
   Droplets,
@@ -198,6 +199,8 @@ export default function HomePage() {
             <BentoGrid variant="2-2" items={bentoItems} />
           </div>
         </section>
+
+        <PricingSection />
 
         {/* CTA */}
         <section className="px-6 py-28 md:py-36 border-t border-border">
