@@ -26,6 +26,34 @@ import {
 import PageHeader from "@/components/page-header";
 import Footer from "@/components/footer";
 import NumberStepper from "@/components/ui/number-stepper";
+import { motion, AnimatePresence } from "framer-motion";
+
+const listVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.04,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 12, scale: 0.98 },
+  show: { opacity: 1, y: 0, scale: 1 },
+};
+
+const modalVariants = {
+  hidden: { opacity: 0, scale: 0.95, y: 10 },
+  show: { opacity: 1, scale: 1, y: 0 },
+  exit: { opacity: 0, scale: 0.95, y: 10 },
+};
+
+const backdropVariants = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1 },
+  exit: { opacity: 0 },
+};
 
 export default function TodosPage() {
   const router = useRouter();
@@ -329,33 +357,40 @@ export default function TodosPage() {
 
       <main className="max-w-2xl mx-auto px-4 sm:px-6 py-6 space-y-6 flex-1">
         {/* Stats Row */}
-        {stats && (
-          <div className="flex items-center gap-3 flex-wrap">
-            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-card border border-border rounded-full">
-              <Check size={12} className="text-green-600" />
-              <span className="font-body text-xs font-medium">{stats.completed_today}</span>
-              <span className="text-xs text-muted-foreground font-body">done</span>
-            </div>
-            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-card border border-border rounded-full">
-              <Play size={12} className="text-blue-600" />
-              <span className="font-body text-xs font-medium">{stats.active}</span>
-              <span className="text-xs text-muted-foreground font-body">active</span>
-            </div>
-            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-card border border-border rounded-full">
-              <Pause size={12} className="text-amber-600" />
-              <span className="font-body text-xs font-medium">{stats.snoozed}</span>
-              <span className="text-xs text-muted-foreground font-body">snoozed</span>
-            </div>
-            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-card border border-border rounded-full">
-              <Archive size={12} className="text-purple-600" />
-              <span className="font-body text-xs font-medium">{stats.parking_lot}</span>
-              <span className="text-xs text-muted-foreground font-body">parking</span>
-            </div>
-          </div>
-        )}
+        <AnimatePresence>
+          {stats && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-center gap-3 flex-wrap"
+            >
+              {[
+                { icon: Check, label: "done", value: stats.completed_today, color: "text-green-600" },
+                { icon: Play, label: "active", value: stats.active, color: "text-blue-600" },
+                { icon: Pause, label: "snoozed", value: stats.snoozed, color: "text-amber-600" },
+                { icon: Archive, label: "parking", value: stats.parking_lot, color: "text-purple-600" },
+              ].map((stat, i) => (
+                <motion.div
+                  key={stat.label}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: i * 0.05 }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-card border border-border rounded-full"
+                >
+                  <stat.icon size={12} className={stat.color} />
+                  <span className="font-body text-xs font-medium">{stat.value}</span>
+                  <span className="text-xs text-muted-foreground font-body">{stat.label}</span>
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Compose Area - Big inline text area */}
-        <div className="bg-card border border-border rounded-2xl p-4 sm:p-5 focus-within:border-foreground/20 transition-colors">
+        <motion.div
+          layout
+          className="bg-card border border-border rounded-2xl p-4 sm:p-5 focus-within:border-foreground/20 transition-colors"
+        >
           <textarea
             ref={textareaRef}
             value={composeText}
@@ -371,116 +406,150 @@ export default function TodosPage() {
               }
             }}
           />
-          <div className={`flex items-center justify-between mt-3 pt-3 border-t border-border transition-all ${composeExpanded || composeText ? "opacity-100" : "opacity-0 h-0 overflow-hidden mt-0 pt-0 border-none"}`}>
-            <div className="flex items-center gap-2 flex-wrap">
-              {/* Energy selector */}
-              <div className="flex items-center gap-1">
-                {(["low", "medium", "high"] as const).map((e) => {
-                  const cfg = energyConfig[e];
-                  const Icon = cfg.icon;
-                  return (
-                    <button
-                      key={e}
-                      onClick={() => setComposeEnergy(e)}
-                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-body text-[11px] font-medium transition-colors ${
-                        composeEnergy === e
-                          ? `${cfg.bg} ${cfg.color}`
-                          : "bg-muted text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      <Icon size={12} />
-                      {cfg.label}
-                    </button>
-                  );
-                })}
-              </div>
-              {/* Context selector */}
-              <div className="flex items-center gap-1">
-                {(["desk", "phone", "errands", "quick", "any"] as const).map((c) => {
-                  const cfg = contextConfig[c];
-                  return (
-                    <button
-                      key={c}
-                      onClick={() => setComposeContext(c)}
-                      className={`inline-flex items-center justify-center w-7 h-7 rounded-full font-body text-[10px] font-medium transition-colors ${
-                        composeContext === c
-                          ? "bg-foreground text-background"
-                          : "bg-muted text-muted-foreground hover:text-foreground"
-                      }`}
-                      title={cfg.label}
-                    >
-                      {cfg.short}
-                    </button>
-                  );
-                })}
-              </div>
-              {/* Minutes */}
-              <div className="flex items-center gap-1">
-                <Clock size={12} className="text-muted-foreground" />
-                <NumberStepper
-                  value={composeMinutes}
-                  onChange={setComposeMinutes}
-                  min={0}
-                  step={5}
-                  placeholder="min"
-                  unit="m"
-                />
-              </div>
-            </div>
-            <button
-              onClick={handleSubmitTodo}
-              disabled={composeSending || !composeText.trim()}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-foreground text-background rounded-full font-body text-xs font-medium hover:opacity-80 transition-opacity disabled:opacity-50"
-            >
-              {composeSending ? (
-                <span className="animate-gentle-pulse">Adding...</span>
-              ) : (
-                <>
-                  <Send size={12} />
-                  Add
-                </>
-              )}
-            </button>
-          </div>
-        </div>
+          <AnimatePresence>
+            {(composeExpanded || composeText) && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2 }}
+                className="flex items-center justify-between mt-3 pt-3 border-t border-border overflow-hidden"
+              >
+                <div className="flex items-center gap-2 flex-wrap">
+                  {/* Energy selector */}
+                  <div className="flex items-center gap-1">
+                    {(["low", "medium", "high"] as const).map((e) => {
+                      const cfg = energyConfig[e];
+                      const Icon = cfg.icon;
+                      return (
+                        <button
+                          key={e}
+                          onClick={() => setComposeEnergy(e)}
+                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-body text-[11px] font-medium transition-colors ${
+                            composeEnergy === e
+                              ? `${cfg.bg} ${cfg.color}`
+                              : "bg-muted text-muted-foreground hover:text-foreground"
+                          }`}
+                        >
+                          <Icon size={12} />
+                          {cfg.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {/* Context selector */}
+                  <div className="flex items-center gap-1">
+                    {(["desk", "phone", "errands", "quick", "any"] as const).map((c) => {
+                      const cfg = contextConfig[c];
+                      return (
+                        <button
+                          key={c}
+                          onClick={() => setComposeContext(c)}
+                          className={`inline-flex items-center justify-center w-7 h-7 rounded-full font-body text-[10px] font-medium transition-colors ${
+                            composeContext === c
+                              ? "bg-foreground text-background"
+                              : "bg-muted text-muted-foreground hover:text-foreground"
+                          }`}
+                          title={cfg.label}
+                        >
+                          {cfg.short}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {/* Minutes */}
+                  <div className="flex items-center gap-1">
+                    <Clock size={12} className="text-muted-foreground" />
+                    <NumberStepper
+                      value={composeMinutes}
+                      onChange={setComposeMinutes}
+                      min={0}
+                      step={5}
+                      placeholder="min"
+                      unit="m"
+                    />
+                  </div>
+                </div>
+                <button
+                  onClick={handleSubmitTodo}
+                  disabled={composeSending || !composeText.trim()}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-foreground text-background rounded-full font-body text-xs font-medium hover:opacity-80 transition-opacity disabled:opacity-50"
+                >
+                  {composeSending ? (
+                    <span className="animate-gentle-pulse">Adding...</span>
+                  ) : (
+                    <>
+                      <Send size={12} />
+                      Add
+                    </>
+                  )}
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
 
         {/* Done for Day Result */}
-        {doneForDayResult && (
-          <div className="p-4 bg-muted/50 border border-border rounded-2xl text-center">
-            <Sun size={20} className="mx-auto mb-1 text-amber-500" />
-            <p className="font-body text-sm text-foreground">{doneForDayResult}</p>
-            <button
-              onClick={() => setDoneForDayResult(null)}
-              className="mt-1 text-xs text-muted-foreground hover:text-foreground font-body"
+        <AnimatePresence>
+          {doneForDayResult && (
+            <motion.div
+              initial={{ opacity: 0, y: 10, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.98 }}
+              className="p-4 bg-muted/50 border border-border rounded-2xl text-center"
             >
-              Dismiss
-            </button>
-          </div>
-        )}
+              <Sun size={20} className="mx-auto mb-1 text-amber-500" />
+              <p className="font-body text-sm text-foreground">{doneForDayResult}</p>
+              <button
+                onClick={() => setDoneForDayResult(null)}
+                className="mt-1 text-xs text-muted-foreground hover:text-foreground font-body"
+              >
+                Dismiss
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Error */}
-        {error && (
-          <div className="text-sm text-destructive font-body text-center py-2">
-            {error}
-          </div>
-        )}
+        <AnimatePresence>
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="text-sm text-destructive font-body text-center py-2"
+            >
+              {error}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Filter Tabs */}
         <div className="flex items-center gap-1 flex-wrap">
           {filterTabs.map((tab) => {
             const Icon = tab.icon;
+            const isActive = activeFilter === tab.key;
             return (
               <button
                 key={tab.key}
                 onClick={() => setActiveFilter(tab.key)}
-                className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl font-body text-xs font-medium transition-colors shrink-0 ${
-                  activeFilter === tab.key
-                    ? "bg-foreground text-background"
+                className={`relative inline-flex items-center gap-1.5 px-3 py-2 rounded-xl font-body text-xs font-medium transition-colors shrink-0 ${
+                  isActive
+                    ? "text-background"
                     : "bg-muted text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <Icon size={13} />
-                {tab.label}
+                {isActive && (
+                  <motion.div
+                    layoutId="activeFilter"
+                    className="absolute inset-0 bg-foreground rounded-xl"
+                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                  />
+                )}
+                <span className="relative z-10 flex items-center gap-1.5">
+                  <Icon size={13} />
+                  {tab.label}
+                </span>
               </button>
             );
           })}
@@ -499,254 +568,334 @@ export default function TodosPage() {
             </button>
           ))}
           {(energyFilter || contextFilter) && (
-            <button
+            <motion.button
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
               onClick={() => { setEnergyFilter(null); setContextFilter(null); }}
               className="px-2 py-2 text-xs text-muted-foreground hover:text-foreground font-body"
             >
               <X size={14} />
-            </button>
+            </motion.button>
           )}
         </div>
 
         {/* Loading */}
-        {loading && (
-          <div className="text-sm text-muted-foreground font-body text-center py-8">
-            <span className="animate-gentle-pulse">Loading todos...</span>
-          </div>
-        )}
+        <AnimatePresence>
+          {loading && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="text-sm text-muted-foreground font-body text-center py-8"
+            >
+              <span className="animate-gentle-pulse">Loading todos...</span>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Empty State */}
-        {!loading && todos.length === 0 && (
-          <div className="text-center py-16">
-            <div className="w-12 h-12 bg-muted rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <ListTodo size={20} className="text-muted-foreground" />
-            </div>
-            <p className="text-sm text-muted-foreground font-body mb-1">
-              No todos here.
-            </p>
-            <p className="text-xs text-muted-foreground font-body">
-              Write something above or use the AI assistant.
-            </p>
-          </div>
-        )}
+        <AnimatePresence>
+          {!loading && todos.length === 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              className="text-center py-16"
+            >
+              <div className="w-12 h-12 bg-muted rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <ListTodo size={20} className="text-muted-foreground" />
+              </div>
+              <p className="text-sm text-muted-foreground font-body mb-1">
+                No todos here.
+              </p>
+              <p className="text-xs text-muted-foreground font-body">
+                Write something above or use the AI assistant.
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Todo List */}
-        <div className="space-y-2">
-          {todos.map((todo) => {
-            const eCfg = energyConfig[todo.energy_level];
-            const cCfg = contextConfig[todo.context];
-            const EIcon = eCfg.icon;
-            return (
-              <div
-                key={todo.id}
-                className={`group flex items-start gap-3 p-4 bg-card border border-border rounded-2xl hover:border-foreground/20 transition-colors ${
-                  todo.status === "completed" ? "opacity-50" : ""
-                }`}
-              >
-                <button
-                  onClick={() => handleToggleStatus(todo)}
-                  className={`mt-0.5 shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
-                    todo.status === "completed"
-                      ? "bg-foreground border-foreground"
-                      : "border-border hover:border-foreground"
+        <motion.div
+          variants={listVariants}
+          initial="hidden"
+          animate="show"
+          className="space-y-2"
+        >
+          <AnimatePresence mode="popLayout">
+            {todos.map((todo) => {
+              const eCfg = energyConfig[todo.energy_level];
+              const cCfg = contextConfig[todo.context];
+              const EIcon = eCfg.icon;
+              return (
+                <motion.div
+                  key={todo.id}
+                  layout
+                  variants={itemVariants}
+                  initial="hidden"
+                  animate="show"
+                  exit={{ opacity: 0, x: -20, scale: 0.95 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 35 }}
+                  className={`group flex items-start gap-3 p-4 bg-card border border-border rounded-2xl hover:border-foreground/20 transition-colors ${
+                    todo.status === "completed" ? "opacity-50" : ""
                   }`}
                 >
-                  {todo.status === "completed" && <Check size={12} className="text-background" />}
-                </button>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className={`font-body text-sm ${todo.status === "completed" ? "line-through text-muted-foreground" : "text-foreground font-medium"}`}>
-                      {todo.title}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 mt-1.5">
-                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-body text-[10px] font-medium ${eCfg.bg} ${eCfg.color}`}>
-                      <EIcon size={10} />
-                      {eCfg.label}
-                    </span>
-                    <span className="text-[10px] text-muted-foreground font-body">
-                      {cCfg.label}
-                    </span>
-                    {todo.estimated_minutes && (
-                      <span className="text-[10px] text-muted-foreground font-body flex items-center gap-0.5">
-                        <Clock size={10} />
-                        {todo.estimated_minutes}m
-                        {todo.actual_minutes && ` / ${todo.actual_minutes}m`}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                  {todo.status !== "completed" && (
-                    <>
-                      <button
-                        onClick={() => openFocus(todo)}
-                        className="p-1.5 rounded-full hover:bg-muted transition-colors"
-                        title="Focus"
-                      >
-                        <Timer size={13} className="text-muted-foreground" />
-                      </button>
-                      <button
-                        onClick={() => handleSnooze(todo.id)}
-                        className="p-1.5 rounded-full hover:bg-muted transition-colors"
-                        title="Snooze"
-                      >
-                        <Pause size={13} className="text-muted-foreground" />
-                      </button>
-                    </>
-                  )}
                   <button
-                    onClick={() => handleDelete(todo.id)}
-                    className="p-1.5 rounded-full hover:bg-destructive/10 transition-colors"
-                    title="Delete"
+                    onClick={() => handleToggleStatus(todo)}
+                    className={`mt-0.5 shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                      todo.status === "completed"
+                        ? "bg-foreground border-foreground"
+                        : "border-border hover:border-foreground"
+                    }`}
                   >
-                    <Trash2 size={13} className="text-destructive" />
+                    {todo.status === "completed" && <Check size={12} className="text-background" />}
                   </button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className={`font-body text-sm ${todo.status === "completed" ? "line-through text-muted-foreground" : "text-foreground font-medium"}`}>
+                        {todo.title}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 mt-1.5">
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-body text-[10px] font-medium ${eCfg.bg} ${eCfg.color}`}>
+                        <EIcon size={10} />
+                        {eCfg.label}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground font-body">
+                        {cCfg.label}
+                      </span>
+                      {todo.estimated_minutes && (
+                        <span className="text-[10px] text-muted-foreground font-body flex items-center gap-0.5">
+                          <Clock size={10} />
+                          {todo.estimated_minutes}m
+                          {todo.actual_minutes && ` / ${todo.actual_minutes}m`}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {todo.status !== "completed" && (
+                      <>
+                        <button
+                          onClick={() => openFocus(todo)}
+                          className="p-1.5 rounded-full hover:bg-muted transition-colors"
+                          title="Focus"
+                        >
+                          <Timer size={13} className="text-muted-foreground" />
+                        </button>
+                        <button
+                          onClick={() => handleSnooze(todo.id)}
+                          className="p-1.5 rounded-full hover:bg-muted transition-colors"
+                          title="Snooze"
+                        >
+                          <Pause size={13} className="text-muted-foreground" />
+                        </button>
+                      </>
+                    )}
+                    <button
+                      onClick={() => handleDelete(todo.id)}
+                      className="p-1.5 rounded-full hover:bg-destructive/10 transition-colors"
+                      title="Delete"
+                    >
+                      <Trash2 size={13} className="text-destructive" />
+                    </button>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
+        </motion.div>
       </main>
 
       {/* AI Modal */}
-      {showAIModal && (
-        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-card border border-border rounded-2xl p-6 shadow-lg">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <Sparkles size={18} className="text-foreground" />
-                <h2 className="font-heading text-base font-medium tracking-tight">AI Assistant</h2>
-              </div>
-              <button onClick={() => setShowAIModal(false)} className="p-1.5 rounded-full hover:bg-muted">
-                <X size={16} />
-              </button>
-            </div>
-            {planInfo && (
-              <div className="flex items-center justify-between mb-4 px-3 py-2 bg-muted rounded-xl">
-                <span className="font-body text-xs text-muted-foreground">
-                  Plan: <span className="font-medium text-foreground capitalize">{planInfo.plan}</span>
-                </span>
-                <span className="font-body text-xs text-muted-foreground">
-                  {planInfo.ai_requests_remaining} / {planInfo.ai_requests_limit} remaining
-                </span>
-              </div>
-            )}
-            <p className="text-sm text-muted-foreground font-body mb-4">
-              Describe your tasks and the AI will create them with the right energy level and context.
-            </p>
-            <textarea
-              value={aiPrompt}
-              onChange={(e) => setAiPrompt(e.target.value)}
-              placeholder="I need to finish my homework, prepare for the meeting, and buy groceries..."
-              rows={4}
-              className="w-full px-4 py-3 bg-background border border-border rounded-xl font-body text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none mb-4"
-              autoFocus
-            />
-            <button
-              onClick={handleAI}
-              disabled={aiLoading || !aiPrompt.trim()}
-              className="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-foreground text-background rounded-full font-body text-sm font-medium hover:opacity-80 transition-opacity disabled:opacity-50"
+      <AnimatePresence>
+        {showAIModal && (
+          <motion.div
+            variants={backdropVariants}
+            initial="hidden"
+            animate="show"
+            exit="exit"
+            className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4"
+            onClick={() => setShowAIModal(false)}
+          >
+            <motion.div
+              variants={modalVariants}
+              initial="hidden"
+              animate="show"
+              exit="exit"
+              transition={{ type: "spring", stiffness: 400, damping: 30 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-md bg-card border border-border rounded-2xl p-6 shadow-lg"
             >
-              {aiLoading ? (
-                <span className="animate-gentle-pulse">Generating...</span>
-              ) : (
-                <>
-                  <Sparkles size={16} />
-                  Generate Todos
-                </>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Sparkles size={18} className="text-foreground" />
+                  <h2 className="font-heading text-base font-medium tracking-tight">AI Assistant</h2>
+                </div>
+                <button onClick={() => setShowAIModal(false)} className="p-1.5 rounded-full hover:bg-muted">
+                  <X size={16} />
+                </button>
+              </div>
+              {planInfo && (
+                <div className="flex items-center justify-between mb-4 px-3 py-2 bg-muted rounded-xl">
+                  <span className="font-body text-xs text-muted-foreground">
+                    Plan: <span className="font-medium text-foreground capitalize">{planInfo.plan}</span>
+                  </span>
+                  <span className="font-body text-xs text-muted-foreground">
+                    {planInfo.ai_requests_remaining} / {planInfo.ai_requests_limit} remaining
+                  </span>
+                </div>
               )}
-            </button>
-          </div>
-        </div>
-      )}
+              <p className="text-sm text-muted-foreground font-body mb-4">
+                Describe your tasks and the AI will create them with the right energy level and context.
+              </p>
+              <textarea
+                value={aiPrompt}
+                onChange={(e) => setAiPrompt(e.target.value)}
+                placeholder="I need to finish my homework, prepare for the meeting, and buy groceries..."
+                rows={4}
+                className="w-full px-4 py-3 bg-background border border-border rounded-xl font-body text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none mb-4"
+                autoFocus
+              />
+              <button
+                onClick={handleAI}
+                disabled={aiLoading || !aiPrompt.trim()}
+                className="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-foreground text-background rounded-full font-body text-sm font-medium hover:opacity-80 transition-opacity disabled:opacity-50"
+              >
+                {aiLoading ? (
+                  <span className="animate-gentle-pulse">Generating...</span>
+                ) : (
+                  <>
+                    <Sparkles size={16} />
+                    Generate Todos
+                  </>
+                )}
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Done for Day Modal */}
-      {showDoneForDay && (
-        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-sm bg-card border border-border rounded-2xl p-6 shadow-lg text-center">
-            <Moon size={28} className="mx-auto mb-3 text-foreground" />
-            <h2 className="font-heading text-lg font-medium tracking-tight mb-1">Done for the day?</h2>
-            <p className="text-sm text-muted-foreground font-body mb-6">
-              Mark your day as complete. Unfinished tasks will be snoozed to tomorrow.
-            </p>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setShowDoneForDay(false)}
-                className="flex-1 px-4 py-2.5 bg-background text-foreground border border-border rounded-full font-body text-sm font-medium hover:bg-muted transition-colors"
-              >
-                Not yet
-              </button>
-              <button
-                onClick={handleDoneForDay}
-                className="flex-1 px-4 py-2.5 bg-foreground text-background rounded-full font-body text-sm font-medium hover:opacity-80 transition-opacity"
-              >
-                Yes, I&apos;m done
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <AnimatePresence>
+        {showDoneForDay && (
+          <motion.div
+            variants={backdropVariants}
+            initial="hidden"
+            animate="show"
+            exit="exit"
+            className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4"
+            onClick={() => setShowDoneForDay(false)}
+          >
+            <motion.div
+              variants={modalVariants}
+              initial="hidden"
+              animate="show"
+              exit="exit"
+              transition={{ type: "spring", stiffness: 400, damping: 30 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-sm bg-card border border-border rounded-2xl p-6 shadow-lg text-center"
+            >
+              <Moon size={28} className="mx-auto mb-3 text-foreground" />
+              <h2 className="font-heading text-lg font-medium tracking-tight mb-1">Done for the day?</h2>
+              <p className="text-sm text-muted-foreground font-body mb-6">
+                Mark your day as complete. Unfinished tasks will be snoozed to tomorrow.
+              </p>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setShowDoneForDay(false)}
+                  className="flex-1 px-4 py-2.5 bg-background text-foreground border border-border rounded-full font-body text-sm font-medium hover:bg-muted transition-colors"
+                >
+                  Not yet
+                </button>
+                <button
+                  onClick={handleDoneForDay}
+                  className="flex-1 px-4 py-2.5 bg-foreground text-background rounded-full font-body text-sm font-medium hover:opacity-80 transition-opacity"
+                >
+                  Yes, I&apos;m done
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Focus Timer Modal */}
-      {focusTodo && (
-        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-sm bg-card border border-border rounded-2xl p-6 shadow-lg text-center">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-2">
-                <Timer size={18} className="text-foreground" />
-                <h2 className="font-heading text-base font-medium tracking-tight">Focus</h2>
+      <AnimatePresence>
+        {focusTodo && (
+          <motion.div
+            variants={backdropVariants}
+            initial="hidden"
+            animate="show"
+            exit="exit"
+            className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4"
+            onClick={closeFocus}
+          >
+            <motion.div
+              variants={modalVariants}
+              initial="hidden"
+              animate="show"
+              exit="exit"
+              transition={{ type: "spring", stiffness: 400, damping: 30 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-sm bg-card border border-border rounded-2xl p-6 shadow-lg text-center"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-2">
+                  <Timer size={18} className="text-foreground" />
+                  <h2 className="font-heading text-base font-medium tracking-tight">Focus</h2>
+                </div>
+                <button
+                  onClick={closeFocus}
+                  className="p-1.5 rounded-full hover:bg-muted transition-colors"
+                >
+                  <X size={16} />
+                </button>
               </div>
-              <button
-                onClick={closeFocus}
-                className="p-1.5 rounded-full hover:bg-muted transition-colors"
-              >
-                <X size={16} />
-              </button>
-            </div>
-            <p className="text-sm text-muted-foreground font-body mb-6 truncate px-2">
-              {focusTodo.title}
-            </p>
-            <div className="text-6xl font-heading font-medium tracking-tight tabular-nums mb-8">
-              {formatTime(focusRemaining)}
-            </div>
-            {!focusRunning && focusRemaining === focusDuration * 60 && (
-              <div className="flex items-center justify-center gap-2 mb-6">
-                {[15, 25, 45].map((min) => (
-                  <button
-                    key={min}
-                    onClick={() => {
-                      setFocusDuration(min);
-                      setFocusRemaining(min * 60);
-                    }}
-                    className={`px-3 py-1.5 rounded-full font-body text-xs font-medium transition-colors ${
-                      focusDuration === min
-                        ? "bg-foreground text-background"
-                        : "bg-muted text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    {min}m
-                  </button>
-                ))}
+              <p className="text-sm text-muted-foreground font-body mb-6 truncate px-2">
+                {focusTodo.title}
+              </p>
+              <div className="text-6xl font-heading font-medium tracking-tight tabular-nums mb-8">
+                {formatTime(focusRemaining)}
               </div>
-            )}
-            <div className="flex items-center gap-3">
-              <button
-                onClick={toggleFocusTimer}
-                className="flex-1 px-4 py-2.5 bg-foreground text-background rounded-full font-body text-sm font-medium hover:opacity-80 transition-opacity"
-              >
-                {focusRunning ? "Pause" : focusRemaining === focusDuration * 60 ? "Start" : "Resume"}
-              </button>
-              <button
-                onClick={finishFocus}
-                className="flex-1 px-4 py-2.5 bg-background text-foreground border border-border rounded-full font-body text-sm font-medium hover:bg-muted transition-colors"
-              >
-                Finish
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+              {!focusRunning && focusRemaining === focusDuration * 60 && (
+                <div className="flex items-center justify-center gap-2 mb-6">
+                  {[15, 25, 45].map((min) => (
+                    <button
+                      key={min}
+                      onClick={() => {
+                        setFocusDuration(min);
+                        setFocusRemaining(min * 60);
+                      }}
+                      className={`px-3 py-1.5 rounded-full font-body text-xs font-medium transition-colors ${
+                        focusDuration === min
+                          ? "bg-foreground text-background"
+                          : "bg-muted text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      {min}m
+                    </button>
+                  ))}
+                </div>
+              )}
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={toggleFocusTimer}
+                  className="flex-1 px-4 py-2.5 bg-foreground text-background rounded-full font-body text-sm font-medium hover:opacity-80 transition-opacity"
+                >
+                  {focusRunning ? "Pause" : focusRemaining === focusDuration * 60 ? "Start" : "Resume"}
+                </button>
+                <button
+                  onClick={finishFocus}
+                  className="flex-1 px-4 py-2.5 bg-background text-foreground border border-border rounded-full font-body text-sm font-medium hover:bg-muted transition-colors"
+                >
+                  Finish
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <Footer />
     </div>
   );

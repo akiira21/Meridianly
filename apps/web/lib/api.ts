@@ -192,6 +192,29 @@ export interface UserPlanInfo {
   ai_requests_reset_at: string | null;
 }
 
+export interface UserProfile {
+  user_id: number;
+  username: string;
+  email: string;
+  name: string | null;
+  avatar_url: string | null;
+  plan: string;
+  role: string;
+  ai_requests_used: number;
+  ai_requests_reset_at: string | null;
+  created_at: string;
+}
+
+export interface UpdateProfilePayload {
+  name?: string | null;
+  avatar_url?: string | null;
+}
+
+export interface ChangePasswordPayload {
+  old_password: string;
+  new_password: string;
+}
+
 export interface WaterIntake {
   id: number;
   user_id: number;
@@ -378,6 +401,16 @@ export const api = {
 
   getPlanInfo: () =>
     axiosInstance.get<UserPlanInfo>("/api/v1/ai/plan"),
+
+  // Profile
+  getMe: () =>
+    axiosInstance.get<UserProfile>("/api/v1/auth/me"),
+
+  updateMe: (payload: UpdateProfilePayload) =>
+    axiosInstance.patch<UserProfile>("/api/v1/auth/me", payload),
+
+  changePassword: (payload: ChangePasswordPayload) =>
+    axiosInstance.post<{ message: string }>("/api/v1/auth/change-password", payload),
 
   // Water
   logWater: (amount_ml: number) =>

@@ -4,6 +4,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/theme-provider";
 import AuthCheck from "@/components/auth-check";
+import NotificationProvider from "@/components/notification-provider";
 
 const bodyFont = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -89,6 +90,7 @@ export default function RootLayout({
           disableTransitionOnChange={false}
         >
           <AuthCheck />
+          <NotificationProvider />
           {children}
         </ThemeProvider>
       </body>

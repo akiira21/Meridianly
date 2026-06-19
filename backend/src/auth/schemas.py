@@ -32,3 +32,23 @@ class ActiveSessionInfo(BaseModel):
 class MaxSessionsExceededResponse(BaseModel):
     detail: str
     active_sessions: list[ActiveSessionInfo]
+
+class UpdateProfileRequest(BaseModel):
+    name: str | None = None
+    avatar_url: str | None = None
+
+class ChangePasswordRequest(BaseModel):
+    old_password: str
+    new_password: str
+
+class UserProfileResponse(BaseModel):
+    user_id: int
+    username: str
+    email: str
+    name: str | None = None
+    avatar_url: str | None = None
+    plan: str
+    role: str
+    ai_requests_used: int
+    ai_requests_reset_at: datetime | None = None
+    created_at: datetime

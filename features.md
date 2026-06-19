@@ -6,9 +6,10 @@ Features suggested by users -
 
 Planed features -
 
-- [] User profile page
-- [] Food scan calorie detector
+- [x] User profile page
+- [x] Notification
 - [] Plans and pricing
+- [] Food scan calorie detector
 - [] PWA web app
 
 

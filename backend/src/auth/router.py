@@ -3,13 +3,14 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, Request, Response
 from fastapi.responses import JSONResponse
 
-from auth.schemas import LoginRequestModel, AuthTokenResponse, ActiveSessionInfo
+from auth.schemas import LoginRequestModel, AuthTokenResponse, ActiveSessionInfo, UpdateProfileRequest, ChangePasswordRequest, UserProfileResponse
 from auth.services import AuthService
 from auth.repository import AuthRepository
 from auth.dependencies import get_current_user
 from config import Config
 from database import get_db_session
 from limiter import limiter
+from slowapi.errors import RateLimitExceeded
 from middleware.decorators import require_auth, require_admin, require_plan, rate_limit
 from users.schemas import CreateUserRequest
 from users.services import UserService
@@ -214,3 +215,86 @@ def get_my_plan(user: dict = Depends(get_current_user)):
         "plan": u.plan.value if hasattr(u, "plan") else "free",
         "role": u.role.value,
     }
+
+
+@auth_router.get("/me", response_model=UserProfileResponse, tags=["user"])
+@require_auth
+@rate_limit("60/minute")
+def get_my_profile(user: dict = Depends(get_current_user)):
+    """Get current user's full profile."""
+    u = user["data"]
+    return UserProfileResponse(
+        user_id=user["user_id"],
+        username=u.username,
+        email=u.email,
+        name=u.name,
+        avatar_url=u.avatar_url,
+        plan=u.plan.value if hasattr(u, "plan") else "free",
+        role=u.role.value if hasattr(u, "role") else "user",
+        ai_requests_used=u.ai_requests_used or 0,
+        ai_requests_reset_at=u.ai_requests_reset_at,
+        created_at=u.created_at,
+    )
+
+
+@auth_router.patch("/me", tags=["user"])
+@require_auth
+@rate_limit("30/minute")
+def update_my_profile(
+    data: UpdateProfileRequest,
+    user: dict = Depends(get_current_user),
+    db=Depends(get_db_session),
+):
+    """Update current user's profile (name, avatar_url)."""
+    updated = UserRepository.update_user(
+        db,
+        user_id=user["user_id"],
+        name=data.name,
+        avatar_url=data.avatar_url,
+    )
+    if not updated:
+        return JSONResponse(
+            content={"detail": "User not found"},
+            status_code=404,
+        )
+    u = updated.data
+    return UserProfileResponse(
+        user_id=updated.user_id,
+        username=u.username,
+        email=u.email,
+        name=u.name,
+        avatar_url=u.avatar_url,
+        plan=u.plan or "free",
+        role="user",
+        ai_requests_used=u.ai_requests_used or 0,
+        ai_requests_reset_at=u.ai_requests_reset_at,
+        created_at=u.created_at,
+    )
+
+
+@auth_router.post("/change-password", tags=["user"])
+@require_auth
+@rate_limit("10/minute")
+def change_password(
+    data: ChangePasswordRequest,
+    user: dict = Depends(get_current_user),
+    db=Depends(get_db_session),
+):
+    """Change password with old password verification."""
+    success = UserRepository.change_password(
+        db,
+        user_id=user["user_id"],
+        old_password=data.old_password,
+        new_password=data.new_password,
+    )
+    if success is None:
+        return JSONResponse(
+            content={"detail": "User not found"},
+            status_code=404,
+        )
+    if not success:
+        return JSONResponse(
+            content={"detail": "Incorrect old password"},
+            status_code=400,
+        )
+    return {"message": "Password changed successfully"}

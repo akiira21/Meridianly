@@ -9,6 +9,7 @@ import PageHeader from "@/components/page-header";
 import Footer from "@/components/footer";
 import NumberStepper from "@/components/ui/number-stepper";
 import WaterBentoCard from "@/components/ui/water-bento-card";
+import { useNotifications } from "@/lib/notifications";
 
 const QUICK_AMOUNTS = [150, 250, 330, 500];
 
@@ -16,6 +17,7 @@ export default function WaterPage() {
   const router = useRouter();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const rehydrated = useAuthStore((state) => state.rehydrated);
+  const { updateSettings } = useNotifications();
 
   const [summary, setSummary] = useState<WaterDailySummary | null>(null);
   const [intakes, setIntakes] = useState<WaterIntake[]>([]);
@@ -49,6 +51,7 @@ export default function WaterPage() {
   async function logWater(amount_ml: number) {
     try {
       await api.logWater(amount_ml);
+      updateSettings({ lastWaterIntakeTime: new Date().toISOString() });
       loadToday();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to log water");
