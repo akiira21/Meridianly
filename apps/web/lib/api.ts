@@ -122,6 +122,8 @@ export interface Todo {
   actual_minutes: number | null;
   completed_at: string | null;
   done_for_day: boolean;
+  is_daily: boolean;
+  daily_last_reset_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -138,6 +140,7 @@ export interface TodoCreatePayload {
   context?: "desk" | "phone" | "errands" | "quick" | "any";
   estimated_minutes?: number | null;
   status?: "active" | "completed" | "snoozed" | "archived" | "parking_lot";
+  is_daily?: boolean;
 }
 
 export interface TodoUpdatePayload {
@@ -149,6 +152,7 @@ export interface TodoUpdatePayload {
   status?: "active" | "completed" | "snoozed" | "archived" | "parking_lot";
   snoozed_until?: string | null;
   done_for_day?: boolean;
+  is_daily?: boolean;
 }
 
 export interface TodoStats {
@@ -394,6 +398,9 @@ export const api = {
 
   reactivateSnoozed: () =>
     axiosInstance.post<{ reactivated: number; items: Todo[] }>("/api/v1/todos/reactivate-snoozed"),
+
+  ensureDailyTodos: () =>
+    axiosInstance.post<{ reactivated: number; items: Todo[] }>("/api/v1/todos/daily/ensure"),
 
   // AI
   generateTodos: (prompt: string) =>

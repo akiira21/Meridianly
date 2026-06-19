@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from fastapi import HTTPException
 
 from todos.models import Todo, TodoStatus, EnergyLevel, Context
@@ -17,7 +17,10 @@ class TodoService:
             "context": data.context,
             "estimated_minutes": data.estimated_minutes,
             "status": data.status,
+            "is_daily": data.is_daily,
         }
+        if data.is_daily:
+            todo_data["daily_last_reset_at"] = date.today()
         return TodoRepository.create(db, todo_data)
 
     @staticmethod
@@ -55,7 +58,35 @@ class TodoService:
             update_data["completed_at"] = None
             update_data["snoozed_until"] = None
 
+        if update_data.get("is_daily") and not todo.is_daily:
+            update_data["daily_last_reset_at"] = date.today()
+
         return TodoRepository.update(db, todo, update_data)
+
+    @staticmethod
+    def ensure_daily_todos(db, user_id: int) -> list[Todo]:
+        today = date.today()
+        daily_todos = TodoRepository.get_daily_todos(db, user_id)
+        reactivated = []
+
+        for todo in daily_todos:
+            if todo.daily_last_reset_at == today:
+                continue
+            TodoRepository.update(
+                db,
+                todo,
+                {
+                    "status": TodoStatus.ACTIVE,
+                    "completed_at": None,
+                    "actual_minutes": None,
+                    "snoozed_until": None,
+                    "done_for_day": False,
+                    "daily_last_reset_at": today,
+                },
+            )
+            reactivated.append(todo)
+
+        return reactivated
 
     @staticmethod
     def delete_todo(db, todo_id: int, user_id: int) -> bool:

@@ -1,9 +1,9 @@
 from __future__ import annotations
 from enum import Enum
-from sqlalchemy import String, DateTime, Boolean, Enum as SQLEnum, Integer, ForeignKey, Text, func
+from sqlalchemy import String, Date, DateTime, Boolean, Enum as SQLEnum, Integer, ForeignKey, Text, func
 from sqlalchemy.orm import Mapped, mapped_column
 
-from datetime import datetime
+from datetime import date, datetime
 
 from database import Base
 
@@ -53,6 +53,9 @@ class Todo(Base):
     actual_minutes: Mapped[int] = mapped_column(Integer, nullable=True)
     completed_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
     done_for_day: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+
+    is_daily: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    daily_last_reset_at: Mapped[date] = mapped_column(Date, nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())

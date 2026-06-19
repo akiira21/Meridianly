@@ -11,10 +11,10 @@ from todos.schemas import (
     TodoListResponse,
     TodoFilterParams,
     SnoozeRequest,
-    FocusStartRequest,
     FocusEndRequest,
     DoneForDayRequest,
     DoneForDayResponse,
+    DailyEnsureResponse,
 )
 from todos.services import TodoService
 
@@ -120,6 +120,20 @@ def reactivate_snoozed(
         "reactivated": len(todos),
         "items": [TodoResponse.model_validate(t) for t in todos],
     }
+
+
+@todos_router.post("/daily/ensure", response_model=DailyEnsureResponse)
+@require_auth
+@rate_limit("10/minute")
+def ensure_daily_todos(
+    db: Session = Depends(get_db_session),
+    user: dict = Depends(get_current_user),
+):
+    todos = TodoService.ensure_daily_todos(db, user["user_id"])
+    return DailyEnsureResponse(
+        reactivated=len(todos),
+        items=[TodoResponse.model_validate(t) for t in todos],
+    )
 
 
 @todos_router.get("/{todo_id}", response_model=TodoResponse)

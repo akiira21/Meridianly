@@ -77,6 +77,17 @@ class TodoRepository:
             return False
 
     @staticmethod
+    def get_daily_todos(db: Session, user_id: int) -> list[Todo]:
+        query = select(Todo).where(
+            and_(
+                Todo.user_id == user_id,
+                Todo.is_daily == True,
+            )
+        ).order_by(desc(Todo.created_at))
+        result = db.execute(query)
+        return list(result.scalars().all())
+
+    @staticmethod
     def get_active_todos(db: Session, user_id: int) -> list[Todo]:
         query = select(Todo).where(
             and_(

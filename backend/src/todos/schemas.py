@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from pydantic import BaseModel
 
 from todos.models import EnergyLevel, Context, TodoStatus
@@ -11,6 +11,7 @@ class TodoCreateRequest(BaseModel):
     context: Context = Context.ANY
     estimated_minutes: int | None = None
     status: TodoStatus = TodoStatus.ACTIVE
+    is_daily: bool = False
 
 
 class TodoUpdateRequest(BaseModel):
@@ -22,6 +23,7 @@ class TodoUpdateRequest(BaseModel):
     status: TodoStatus | None = None
     snoozed_until: datetime | None = None
     done_for_day: bool | None = None
+    is_daily: bool | None = None
 
 
 class TodoResponse(BaseModel):
@@ -37,6 +39,8 @@ class TodoResponse(BaseModel):
     actual_minutes: int | None
     completed_at: datetime | None
     done_for_day: bool
+    is_daily: bool
+    daily_last_reset_at: date | None
     created_at: datetime
     updated_at: datetime
 
@@ -54,11 +58,10 @@ class SnoozeRequest(BaseModel):
 
 
 class FocusStartRequest(BaseModel):
-    todo_id: int
+    pass
 
 
 class FocusEndRequest(BaseModel):
-    todo_id: int
     actual_minutes: int
 
 
@@ -71,6 +74,11 @@ class DoneForDayResponse(BaseModel):
     carried_forward: int
     archived: int
     message: str
+
+
+class DailyEnsureResponse(BaseModel):
+    reactivated: int
+    items: list[TodoResponse]
 
 
 class TodoFilterParams(BaseModel):

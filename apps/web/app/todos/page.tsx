@@ -22,6 +22,8 @@ import {
   Inbox,
   Sun,
   Timer,
+  Repeat,
+  Pencil,
 } from "lucide-react";
 import PageHeader from "@/components/page-header";
 import Footer from "@/components/footer";
@@ -74,6 +76,7 @@ export default function TodosPage() {
   const [composeEnergy, setComposeEnergy] = useState<"low" | "medium" | "high">("medium");
   const [composeContext, setComposeContext] = useState<"desk" | "phone" | "errands" | "quick" | "any">("any");
   const [composeMinutes, setComposeMinutes] = useState<number | null>(null);
+  const [composeDaily, setComposeDaily] = useState(false);
   const [composeSending, setComposeSending] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -86,6 +89,16 @@ export default function TodosPage() {
   // Done for day
   const [showDoneForDay, setShowDoneForDay] = useState(false);
   const [doneForDayResult, setDoneForDayResult] = useState<string | null>(null);
+
+  // Edit todo
+  const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editEnergy, setEditEnergy] = useState<"low" | "medium" | "high">("medium");
+  const [editContext, setEditContext] = useState<"desk" | "phone" | "errands" | "quick" | "any">("any");
+  const [editMinutes, setEditMinutes] = useState<number | null>(null);
+  const [editDaily, setEditDaily] = useState(false);
+  const [editSaving, setEditSaving] = useState(false);
 
   // Focus timer
   const [focusTodo, setFocusTodo] = useState<Todo | null>(null);
@@ -100,11 +113,20 @@ export default function TodosPage() {
       router.push("/login");
       return;
     }
+    ensureDailyTodos();
     loadTodos();
     loadStats();
     loadPlanInfo();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, rehydrated, router, activeFilter, energyFilter, contextFilter]);
+
+  async function ensureDailyTodos() {
+    try {
+      await api.ensureDailyTodos();
+    } catch {
+      // silently fail
+    }
+  }
 
   async function loadPlanInfo() {
     try {
@@ -156,10 +178,12 @@ export default function TodosPage() {
         energy_level: composeEnergy,
         context: composeContext,
         estimated_minutes: composeMinutes,
+        is_daily: composeDaily,
       });
       setComposeText("");
       setComposeExpanded(false);
       setComposeMinutes(null);
+      setComposeDaily(false);
       loadTodos();
       loadStats();
     } catch (err) {
@@ -187,6 +211,49 @@ export default function TodosPage() {
       loadStats();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to delete todo");
+    }
+  }
+
+  function openEdit(todo: Todo) {
+    setEditingTodo(todo);
+    setEditTitle(todo.title);
+    setEditDescription(todo.description || "");
+    setEditEnergy(todo.energy_level);
+    setEditContext(todo.context);
+    setEditMinutes(todo.estimated_minutes);
+    setEditDaily(todo.is_daily);
+  }
+
+  function closeEdit() {
+    setEditingTodo(null);
+    setEditTitle("");
+    setEditDescription("");
+    setEditEnergy("medium");
+    setEditContext("any");
+    setEditMinutes(null);
+    setEditDaily(false);
+    setEditSaving(false);
+  }
+
+  async function handleSaveEdit() {
+    if (!editingTodo || !editTitle.trim()) return;
+    setEditSaving(true);
+    try {
+      await api.updateTodo(editingTodo.id, {
+        title: editTitle.trim(),
+        description: editDescription.trim() || null,
+        energy_level: editEnergy,
+        context: editContext,
+        estimated_minutes: editMinutes,
+        is_daily: editDaily,
+      });
+      closeEdit();
+      loadTodos();
+      loadStats();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update todo");
+    } finally {
+      setEditSaving(false);
     }
   }
 
@@ -237,8 +304,8 @@ export default function TodosPage() {
     if (!focusTodo) return;
     const actualMinutes = Math.max(1, Math.round((focusDuration * 60 - focusRemaining) / 60));
     try {
-      await api.startFocus(focusTodo.id);
       await api.endFocus(focusTodo.id, actualMinutes);
+      await api.updateTodo(focusTodo.id, { status: "completed" });
       closeFocus();
       loadTodos();
       loadStats();
@@ -468,6 +535,19 @@ export default function TodosPage() {
                       unit="m"
                     />
                   </div>
+                  {/* Daily toggle */}
+                  <button
+                    onClick={() => setComposeDaily(!composeDaily)}
+                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-body text-[11px] font-medium transition-colors ${
+                      composeDaily
+                        ? "bg-green-500/10 text-green-600"
+                        : "bg-muted text-muted-foreground hover:text-foreground"
+                    }`}
+                    title="Repeat daily"
+                  >
+                    <Repeat size={12} />
+                    Daily
+                  </button>
                 </div>
                 <button
                   onClick={handleSubmitTodo}
@@ -672,6 +752,13 @@ export default function TodosPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={() => openEdit(todo)}
+                      className="p-1.5 rounded-full hover:bg-muted transition-colors"
+                      title="Edit"
+                    >
+                      <Pencil size={13} className="text-muted-foreground" />
+                    </button>
                     {todo.status !== "completed" && (
                       <>
                         <button
@@ -889,6 +976,131 @@ export default function TodosPage() {
                 >
                   Finish
                 </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Edit Todo Modal */}
+      <AnimatePresence>
+        {editingTodo && (
+          <motion.div
+            variants={backdropVariants}
+            initial="hidden"
+            animate="show"
+            exit="exit"
+            className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4"
+            onClick={closeEdit}
+          >
+            <motion.div
+              variants={modalVariants}
+              initial="hidden"
+              animate="show"
+              exit="exit"
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-md bg-card border border-border rounded-2xl p-6 shadow-lg"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="font-heading text-base font-medium tracking-tight">Edit todo</h2>
+                <button onClick={closeEdit} className="p-1.5 rounded-full hover:bg-muted">
+                  <X size={16} />
+                </button>
+              </div>
+              <div className="space-y-4">
+                <input
+                  type="text"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  placeholder="What do you need to do?"
+                  className="w-full px-4 py-2.5 bg-background border border-border rounded-xl font-body text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+                <textarea
+                  value={editDescription}
+                  onChange={(e) => setEditDescription(e.target.value)}
+                  placeholder="Description (optional)"
+                  rows={3}
+                  className="w-full px-4 py-2.5 bg-background border border-border rounded-xl font-body text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+                />
+                <div className="flex items-center gap-2 flex-wrap">
+                  {(["low", "medium", "high"] as const).map((e) => {
+                    const cfg = energyConfig[e];
+                    const Icon = cfg.icon;
+                    return (
+                      <button
+                        key={e}
+                        onClick={() => setEditEnergy(e)}
+                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-body text-[11px] font-medium transition-colors ${
+                          editEnergy === e
+                            ? `${cfg.bg} ${cfg.color}`
+                            : "bg-muted text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        <Icon size={12} />
+                        {cfg.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  {(["desk", "phone", "errands", "quick", "any"] as const).map((c) => {
+                    const cfg = contextConfig[c];
+                    return (
+                      <button
+                        key={c}
+                        onClick={() => setEditContext(c)}
+                        className={`inline-flex items-center justify-center w-7 h-7 rounded-full font-body text-[10px] font-medium transition-colors ${
+                          editContext === c
+                            ? "bg-foreground text-background"
+                            : "bg-muted text-muted-foreground hover:text-foreground"
+                        }`}
+                        title={cfg.label}
+                      >
+                        {cfg.short}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1">
+                    <Clock size={12} className="text-muted-foreground" />
+                    <NumberStepper
+                      value={editMinutes}
+                      onChange={setEditMinutes}
+                      min={0}
+                      step={5}
+                      placeholder="min"
+                      unit="m"
+                    />
+                  </div>
+                  <button
+                    onClick={() => setEditDaily(!editDaily)}
+                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-body text-[11px] font-medium transition-colors ${
+                      editDaily
+                        ? "bg-green-500/10 text-green-600"
+                        : "bg-muted text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <Repeat size={12} />
+                    Daily
+                  </button>
+                </div>
+                <div className="flex items-center gap-3 pt-2">
+                  <button
+                    onClick={closeEdit}
+                    className="flex-1 px-4 py-2.5 bg-background text-foreground border border-border rounded-full font-body text-sm font-medium hover:bg-muted transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveEdit}
+                    disabled={editSaving || !editTitle.trim()}
+                    className="flex-1 px-4 py-2.5 bg-foreground text-background rounded-full font-body text-sm font-medium hover:opacity-80 transition-opacity disabled:opacity-50"
+                  >
+                    {editSaving ? "Saving..." : "Save"}
+                  </button>
+                </div>
               </div>
             </motion.div>
           </motion.div>
