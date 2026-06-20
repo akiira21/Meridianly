@@ -34,6 +34,7 @@ class Users(Base):
     plan: Mapped[UserPlan] = mapped_column(SQLEnum(UserPlan), name="user_plan", nullable=False, default=UserPlan.FREE)
     ai_requests_used: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     ai_requests_reset_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
+    ai_insights_enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())

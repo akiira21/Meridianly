@@ -23,6 +23,8 @@ import {
   AlertCircle,
   Droplets,
   Utensils,
+  Brain,
+  ShieldAlert,
 } from "lucide-react";
 import { getDicebearUrl } from "@/lib/avatar";
 import UserAvatar from "@/components/user-avatar";
@@ -55,6 +57,8 @@ export default function ProfilePage() {
   const [notifEnabled, setNotifEnabled] = useState(() => getNotificationSettings().enabled);
   const [waterReminders, setWaterReminders] = useState(() => getNotificationSettings().waterReminders);
   const [mealReminders, setMealReminders] = useState(() => getNotificationSettings().mealReminders);
+  const [aiInsightReminders, setAiInsightReminders] = useState(() => getNotificationSettings().aiInsightReminders);
+  const [aiInsightsEnabled, setAiInsightsEnabled] = useState(user?.ai_insights_enabled !== false);
 
   useEffect(() => {
     if (!rehydrated) return;
@@ -64,6 +68,10 @@ export default function ProfilePage() {
     }
     fetchProfile();
   }, [isAuthenticated, rehydrated, router, fetchProfile]);
+
+  useEffect(() => {
+    setAiInsightsEnabled(user?.ai_insights_enabled !== false);
+  }, [user?.ai_insights_enabled]);
 
   useEffect(() => {
     if (user) {
@@ -128,7 +136,7 @@ export default function ProfilePage() {
         setNotifEnabled(true);
         updateNotificationSettings({ enabled: true });
         sendNotification("Meridianly Notifications Enabled", {
-          body: "You'll now receive reminders for water and meals!",
+          body: "You'll now receive reminders for water, meals, and AI companion tips!",
         });
       } else {
         setNotifEnabled(false);
@@ -148,6 +156,21 @@ export default function ProfilePage() {
   function handleToggleMeals(enabled: boolean) {
     setMealReminders(enabled);
     updateNotificationSettings({ mealReminders: enabled });
+  }
+
+  function handleToggleAIInsightReminders(enabled: boolean) {
+    setAiInsightReminders(enabled);
+    updateNotificationSettings({ aiInsightReminders: enabled });
+  }
+
+  async function handleToggleAIInsights(enabled: boolean) {
+    setAiInsightsEnabled(enabled);
+    try {
+      await updateProfile({ ai_insights_enabled: enabled });
+    } catch (err) {
+      setAiInsightsEnabled(!enabled);
+      setProfileError(err instanceof Error ? err.message : "Failed to update AI settings");
+    }
   }
 
   function randomizeAvatar() {
@@ -342,6 +365,82 @@ export default function ProfilePage() {
                       />
                     </button>
                   </div>
+
+                  <div className="flex items-center justify-between py-2 border-t border-border">
+                    <div className="flex items-center gap-2">
+                      <Brain size={14} className="text-violet-500" />
+                      <p className="font-body text-sm">AI Companion Alerts</p>
+                    </div>
+                    <button
+                      onClick={() => handleToggleAIInsightReminders(!aiInsightReminders)}
+                      className={`relative w-9 h-5 rounded-full cursor-pointer transition-colors ${
+                        aiInsightReminders ? "bg-foreground" : "bg-muted"
+                      }`}
+                    >
+                      <motion.div
+                        className="absolute top-0.5 left-0.5 w-4 h-4 bg-background rounded-full shadow-sm"
+                        animate={{ x: aiInsightReminders ? 16 : 0 }}
+                        transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                      />
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </motion.section>
+
+        {/* AI Insights */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.15 }}
+          className="bg-card border border-border rounded-2xl p-6 space-y-5"
+        >
+          <div className="flex items-center gap-2">
+            <Brain size={16} className="text-muted-foreground" />
+            <h2 className="font-heading text-base font-medium tracking-tight">
+              AI Insights
+            </h2>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-body text-sm font-medium">Daily AI Companion</p>
+                <p className="text-xs text-muted-foreground font-body">
+                  Morning, noon & night personalized tips
+                </p>
+              </div>
+              <button
+                onClick={() => handleToggleAIInsights(!aiInsightsEnabled)}
+                className={`relative w-11 h-6 rounded-full cursor-pointer transition-colors ${
+                  aiInsightsEnabled ? "bg-foreground" : "bg-muted"
+                }`}
+              >
+                <motion.div
+                  className="absolute top-1 left-1 w-4 h-4 bg-background rounded-full shadow-sm"
+                  animate={{ x: aiInsightsEnabled ? 20 : 0 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                />
+              </button>
+            </div>
+
+            <AnimatePresence>
+              {aiInsightsEnabled && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="overflow-hidden"
+                >
+                  <div className="flex items-start gap-2 p-3 bg-destructive/5 border border-destructive/10 rounded-xl">
+                    <ShieldAlert size={14} className="text-destructive mt-0.5 shrink-0" />
+                    <p className="text-xs text-destructive/80 font-body leading-relaxed">
+                      Your data (food, water, todos, notes) is sent to OpenAI to generate personalized insights. 
+                      This data may be processed by AI companies outside India. Disable this if you prefer not to share your data.
+                    </p>
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -352,7 +451,7 @@ export default function ProfilePage() {
         <motion.section
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.2 }}
+          transition={{ duration: 0.4, delay: 0.25 }}
           className="bg-card border border-border rounded-2xl p-6 space-y-5"
         >
           <div className="flex items-center gap-2">

@@ -12,6 +12,7 @@ export interface User {
   role?: string;
   ai_requests_used?: number;
   ai_requests_reset_at?: string | null;
+  ai_insights_enabled?: boolean;
   created_at?: string;
 }
 
@@ -26,7 +27,7 @@ interface AuthState {
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   fetchProfile: () => Promise<void>;
-  updateProfile: (payload: { name?: string | null; avatar_url?: string | null }) => Promise<void>;
+  updateProfile: (payload: { name?: string | null; avatar_url?: string | null; ai_insights_enabled?: boolean }) => Promise<void>;
 
   login: (email: string, password: string) => Promise<void>;
   register: (payload: {
@@ -65,6 +66,7 @@ export const useAuthStore = create<AuthState>()(
               role: data.role,
               ai_requests_used: data.ai_requests_used,
               ai_requests_reset_at: data.ai_requests_reset_at,
+              ai_insights_enabled: data.ai_insights_enabled,
               created_at: data.created_at,
             },
           });
@@ -87,6 +89,7 @@ export const useAuthStore = create<AuthState>()(
               role: data.role,
               ai_requests_used: data.ai_requests_used,
               ai_requests_reset_at: data.ai_requests_reset_at,
+              ai_insights_enabled: data.ai_insights_enabled,
               created_at: data.created_at,
             },
           });
@@ -114,6 +117,7 @@ export const useAuthStore = create<AuthState>()(
                 role: profile.role,
                 ai_requests_used: profile.ai_requests_used,
                 ai_requests_reset_at: profile.ai_requests_reset_at,
+                ai_insights_enabled: profile.ai_insights_enabled,
                 created_at: profile.created_at,
               },
               isAuthenticated: true,
@@ -163,6 +167,7 @@ export const useAuthStore = create<AuthState>()(
                 role: profile.role,
                 ai_requests_used: profile.ai_requests_used,
                 ai_requests_reset_at: profile.ai_requests_reset_at,
+                ai_insights_enabled: profile.ai_insights_enabled,
                 created_at: profile.created_at,
               },
               isAuthenticated: true,

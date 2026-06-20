@@ -217,7 +217,7 @@ export default function NotesPage() {
                     <h3 className="font-heading text-base font-medium tracking-tight line-clamp-1">
                       {note.title}
                     </h3>
-                    <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                    <div className="flex items-center gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shrink-0">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();

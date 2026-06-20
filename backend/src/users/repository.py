@@ -35,6 +35,7 @@ class UserRepository:
                     plan=user.plan.value,
                     ai_requests_used=user.ai_requests_used,
                     ai_requests_reset_at=user.ai_requests_reset_at,
+                    ai_insights_enabled=user.ai_insights_enabled,
                     created_at=user.created_at
                     ))
 
@@ -64,6 +65,7 @@ class UserRepository:
                     plan=user.plan.value,
                     ai_requests_used=user.ai_requests_used,
                     ai_requests_reset_at=user.ai_requests_reset_at,
+                    ai_insights_enabled=user.ai_insights_enabled,
                     created_at=user.created_at,
                 )
             return None
@@ -88,6 +90,7 @@ class UserRepository:
                         plan=user.plan.value,
                         ai_requests_used=user.ai_requests_used,
                         ai_requests_reset_at=user.ai_requests_reset_at,
+                        ai_insights_enabled=user.ai_insights_enabled,
                         created_at=user.created_at,
                     )
                 )
@@ -116,6 +119,7 @@ class UserRepository:
                         plan=user.plan.value,
                         ai_requests_used=user.ai_requests_used,
                         ai_requests_reset_at=user.ai_requests_reset_at,
+                        ai_insights_enabled=user.ai_insights_enabled,
                         created_at=user.created_at,
                     )
                 )
@@ -127,7 +131,7 @@ class UserRepository:
             raise
 
     @staticmethod
-    def update_user(db, user_id: int, name: str | None = None, avatar_url: str | None = None):
+    def update_user(db, user_id: int, name: str | None = None, avatar_url: str | None = None, ai_insights_enabled: bool | None = None):
         try:
             user = db.query(Users).filter(Users.id == user_id).first()
             if not user:
@@ -137,6 +141,8 @@ class UserRepository:
                 user.name = name
             if avatar_url is not None:
                 user.avatar_url = avatar_url
+            if ai_insights_enabled is not None:
+                user.ai_insights_enabled = ai_insights_enabled
 
             db.commit()
             db.refresh(user)
@@ -151,6 +157,7 @@ class UserRepository:
                     plan=user.plan.value,
                     ai_requests_used=user.ai_requests_used,
                     ai_requests_reset_at=user.ai_requests_reset_at,
+                    ai_insights_enabled=user.ai_insights_enabled,
                     created_at=user.created_at,
                 )
             )

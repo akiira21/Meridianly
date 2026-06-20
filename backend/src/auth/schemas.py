@@ -36,6 +36,7 @@ class MaxSessionsExceededResponse(BaseModel):
 class UpdateProfileRequest(BaseModel):
     name: str | None = None
     avatar_url: str | None = None
+    ai_insights_enabled: bool | None = None
 
 class ChangePasswordRequest(BaseModel):
     old_password: str
@@ -51,4 +52,5 @@ class UserProfileResponse(BaseModel):
     role: str
     ai_requests_used: int
     ai_requests_reset_at: datetime | None = None
+    ai_insights_enabled: bool
     created_at: datetime

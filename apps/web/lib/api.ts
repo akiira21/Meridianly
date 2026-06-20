@@ -188,6 +188,21 @@ export interface AITodoResponse {
   created_count: number;
 }
 
+export interface AIInsightItem {
+  id: number;
+  insight_type: "morning" | "noon" | "night";
+  title: string;
+  message: string;
+  tips: string[];
+  generated_at: string;
+  is_read: boolean;
+}
+
+export interface AIInsightResponse {
+  insights: AIInsightItem[];
+  generated_at: string | null;
+}
+
 export interface UserPlanInfo {
   plan: string;
   ai_requests_used: number;
@@ -206,12 +221,14 @@ export interface UserProfile {
   role: string;
   ai_requests_used: number;
   ai_requests_reset_at: string | null;
+  ai_insights_enabled: boolean;
   created_at: string;
 }
 
 export interface UpdateProfilePayload {
   name?: string | null;
   avatar_url?: string | null;
+  ai_insights_enabled?: boolean;
 }
 
 export interface ChangePasswordPayload {
@@ -281,6 +298,7 @@ export interface FoodPreset {
   protein_per_100g: number;
   carbs_per_100g: number;
   fat_per_100g: number;
+  serving_units: Record<string, number> | null;
   is_system: boolean;
   user_id: number | null;
   created_at: string;
@@ -298,6 +316,7 @@ export interface FoodPresetCreatePayload {
   protein_per_100g?: number;
   carbs_per_100g?: number;
   fat_per_100g?: number;
+  serving_units?: Record<string, number>;
 }
 
 export interface FoodLog {
@@ -306,6 +325,8 @@ export interface FoodLog {
   food_preset_id: number | null;
   food_name: string;
   amount_g: number;
+  serving_unit: string | null;
+  serving_quantity: number | null;
   calculated_calories: number;
   calculated_protein: number;
   calculated_carbs: number;
@@ -322,6 +343,8 @@ export interface FoodLogCreatePayload {
   food_preset_id?: number | null;
   food_name: string;
   amount_g: number;
+  serving_unit?: string | null;
+  serving_quantity?: number | null;
   calories: number;
   protein?: number;
   carbs?: number;
@@ -408,6 +431,12 @@ export const api = {
 
   getPlanInfo: () =>
     axiosInstance.get<UserPlanInfo>("/api/v1/ai/plan"),
+
+  getDailyInsights: () =>
+    axiosInstance.get<AIInsightResponse>("/api/v1/ai/insights"),
+
+  markInsightRead: (id: number) =>
+    axiosInstance.patch<{ message: string }>(`/api/v1/ai/insights/${id}/read`),
 
   // Profile
   getMe: () =>

@@ -9,6 +9,7 @@ class FoodPresetCreateRequest(BaseModel):
     protein_per_100g: float = Field(default=0.0, ge=0)
     carbs_per_100g: float = Field(default=0.0, ge=0)
     fat_per_100g: float = Field(default=0.0, ge=0)
+    serving_units: dict[str, float] | None = None
 
 
 class FoodPresetResponse(BaseModel):
@@ -19,6 +20,7 @@ class FoodPresetResponse(BaseModel):
     protein_per_100g: float
     carbs_per_100g: float
     fat_per_100g: float
+    serving_units: dict[str, float] | None = None
     is_system: bool
     user_id: int | None
     created_at: datetime
@@ -36,6 +38,8 @@ class FoodLogCreateRequest(BaseModel):
     food_preset_id: int | None = None
     food_name: str = Field(..., min_length=1, max_length=100)
     amount_g: int = Field(..., ge=1, le=5000)
+    serving_unit: str | None = None
+    serving_quantity: float | None = None
     calories: float = Field(..., ge=0)
     protein: float = Field(default=0.0, ge=0)
     carbs: float = Field(default=0.0, ge=0)
@@ -48,6 +52,8 @@ class FoodLogResponse(BaseModel):
     food_preset_id: int | None
     food_name: str
     amount_g: int
+    serving_unit: str | None
+    serving_quantity: float | None
     calculated_calories: float
     calculated_protein: float
     calculated_carbs: float

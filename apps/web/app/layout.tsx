@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/theme-provider";
 import AuthCheck from "@/components/auth-check";
 import NotificationProvider from "@/components/notification-provider";
+import AICompanionBubble from "@/components/ai-companion-bubble";
 
 const bodyFont = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -92,6 +93,7 @@ export default function RootLayout({
           <AuthCheck />
           <NotificationProvider />
           {children}
+          <AICompanionBubble />
         </ThemeProvider>
       </body>
     </html>

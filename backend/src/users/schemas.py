@@ -31,6 +31,7 @@ class UserResponse(BaseModel):
     plan: str | None = None
     ai_requests_used: int | None = None
     ai_requests_reset_at: datetime | None = None
+    ai_insights_enabled: bool | None = None
     created_at: datetime
 
 class UserRepoResponse(BaseModel):

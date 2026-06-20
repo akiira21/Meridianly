@@ -7,9 +7,11 @@ export interface NotificationSettings {
   enabled: boolean;
   waterReminders: boolean;
   mealReminders: boolean;
+  aiInsightReminders: boolean;
   lastWaterIntakeTime: string | null;
   lastWaterReminderTime: string | null;
   lastMealReminderDate: string | null;
+  lastAiInsightNotifiedAt: string | null;
 }
 
 const STORAGE_KEY = "meridianly-notifications";
@@ -18,9 +20,11 @@ const DEFAULT_SETTINGS: NotificationSettings = {
   enabled: false,
   waterReminders: true,
   mealReminders: true,
+  aiInsightReminders: true,
   lastWaterIntakeTime: null,
   lastWaterReminderTime: null,
   lastMealReminderDate: null,
+  lastAiInsightNotifiedAt: null,
 };
 
 function loadSettings(): NotificationSettings {
@@ -156,6 +160,55 @@ export function useNotifications() {
     }
   }, [updateSettings]);
 
+  const checkAiInsightReminders = useCallback(async () => {
+    const settings = settingsRef.current;
+    if (!settings.enabled || !settings.aiInsightReminders) return;
+
+    const now = new Date();
+    const hour = now.getHours();
+    const minute = now.getMinutes();
+
+    // Trigger windows: 8:00-8:05, 12:30-12:35, 20:00-20:05
+    let targetType: string | null = null;
+    let titlePrefix = "";
+
+    if (hour === 8 && minute <= 5) {
+      targetType = "morning";
+      titlePrefix = "Good Morning ☀️";
+    } else if (hour === 12 && minute >= 30 && minute <= 35) {
+      targetType = "noon";
+      titlePrefix = "Mid-Day Check 🌤️";
+    } else if (hour === 20 && minute <= 5) {
+      targetType = "night";
+      titlePrefix = "Wind Down 🌙";
+    }
+
+    if (!targetType) return;
+
+    // Avoid duplicate notifications within the same window
+    const lastNotified = settings.lastAiInsightNotifiedAt
+      ? new Date(settings.lastAiInsightNotifiedAt)
+      : null;
+    if (lastNotified && now.getTime() - lastNotified.getTime() < 10 * 60 * 1000) {
+      return;
+    }
+
+    try {
+      const { data } = await api.getDailyInsights();
+      const insight = data.insights.find((i) => i.insight_type === targetType);
+      if (insight) {
+        sendNotification(`${titlePrefix} — ${insight.title}`, {
+          body: insight.message,
+          tag: `ai-insight-${targetType}`,
+          requireInteraction: false,
+        });
+        updateSettings({ lastAiInsightNotifiedAt: now.toISOString() });
+      }
+    } catch {
+      // silently fail
+    }
+  }, [updateSettings]);
+
   useEffect(() => {
     // Check every minute
     intervalRef.current = setInterval(() => {
@@ -164,12 +217,14 @@ export function useNotifications() {
 
       checkWaterReminders();
       checkMealReminders();
+      checkAiInsightReminders();
     }, 60 * 1000);
 
     // Also check immediately if enabled
     if (settingsRef.current.enabled) {
       checkWaterReminders();
       checkMealReminders();
+      checkAiInsightReminders();
     }
 
     return () => {
@@ -177,7 +232,7 @@ export function useNotifications() {
         clearInterval(intervalRef.current);
       }
     };
-  }, [checkWaterReminders, checkMealReminders]);
+  }, [checkWaterReminders, checkMealReminders, checkAiInsightReminders]);
 
   return {
     getSettings,

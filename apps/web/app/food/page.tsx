@@ -3,26 +3,19 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/lib/auth-store";
-import { api } from "@/lib/api";
+import { api, FoodPreset as ApiFoodPreset } from "@/lib/api";
 import { Plus, Trash2, ChevronDown, ChevronUp, Search, Utensils } from "lucide-react";
 import PageHeader from "@/components/page-header";
 import Footer from "@/components/footer";
 
-interface FoodPreset {
-  id: number;
-  name: string;
-  category: string;
-  calories_per_100g: number;
-  protein_per_100g: number;
-  carbs_per_100g: number;
-  fat_per_100g: number;
-  is_system: boolean;
-}
+interface FoodPreset extends ApiFoodPreset {}
 
 interface FoodLog {
   id: number;
   food_name: string;
   amount_g: number;
+  serving_unit: string | null;
+  serving_quantity: number | null;
   calculated_calories: number;
   calculated_protein: number;
   calculated_carbs: number;
@@ -52,6 +45,17 @@ const CATEGORIES = [
   { value: "soups", label: "Soups" },
 ];
 
+const UNIT_LABELS: Record<string, string> = {
+  katori: "Katori",
+  plate: "Plate",
+  bowl: "Bowl",
+  glass: "Glass",
+  piece: "Piece",
+  number: "Number",
+  cup: "Cup",
+  spoon: "Spoon",
+};
+
 export default function FoodPage() {
   const router = useRouter();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -72,6 +76,8 @@ export default function FoodPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPreset, setSelectedPreset] = useState<FoodPreset | null>(null);
   const [amountG, setAmountG] = useState(100);
+  const [selectedUnit, setSelectedUnit] = useState<string | null>(null);
+  const [unitQuantity, setUnitQuantity] = useState<number>(1);
 
   const [showCustomForm, setShowCustomForm] = useState(false);
   const [customName, setCustomName] = useState("");
@@ -114,8 +120,18 @@ export default function FoodPage() {
 
   const handlePresetSelect = (preset: FoodPreset) => {
     setSelectedPreset(preset);
+    const units = preset.serving_units ? Object.keys(preset.serving_units) : [];
+    setSelectedUnit(units.length > 0 ? units[0] : null);
+    setUnitQuantity(1);
     setAmountG(100);
     setShowCustomForm(false);
+  };
+
+  const getEffectiveAmount = (preset: FoodPreset, unit: string | null, qty: number, grams: number): number => {
+    if (unit && preset.serving_units && preset.serving_units[unit]) {
+      return preset.serving_units[unit] * qty;
+    }
+    return grams;
   };
 
   const calculateMacros = (preset: FoodPreset, amount: number) => {
@@ -128,14 +144,20 @@ export default function FoodPage() {
     };
   };
 
+  const effectiveAmount = selectedPreset
+    ? getEffectiveAmount(selectedPreset, selectedUnit, unitQuantity, amountG)
+    : amountG;
+
   const handleLogPreset = async () => {
     if (!selectedPreset) return;
-    const macros = calculateMacros(selectedPreset, amountG);
+    const macros = calculateMacros(selectedPreset, effectiveAmount);
     try {
       await api.logFood({
         food_preset_id: selectedPreset.id,
         food_name: selectedPreset.name,
-        amount_g: amountG,
+        amount_g: Math.round(effectiveAmount),
+        serving_unit: selectedUnit,
+        serving_quantity: selectedUnit ? unitQuantity : null,
         calories: macros.calories,
         protein: macros.protein,
         carbs: macros.carbs,
@@ -143,6 +165,8 @@ export default function FoodPage() {
       });
       setSelectedPreset(null);
       setAmountG(100);
+      setSelectedUnit(null);
+      setUnitQuantity(1);
       loadData();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to log food");
@@ -180,6 +204,13 @@ export default function FoodPage() {
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to delete");
     }
+  };
+
+  const formatLogLabel = (log: FoodLog) => {
+    if (log.serving_unit && log.serving_quantity) {
+      return `${log.serving_quantity} ${UNIT_LABELS[log.serving_unit] || log.serving_unit} (~${log.amount_g}g)`;
+    }
+    return `${log.amount_g}g`;
   };
 
   if (!rehydrated) return null;
@@ -237,7 +268,7 @@ export default function FoodPage() {
                   <div>
                     <p className="text-sm font-medium font-body">{log.food_name}</p>
                     <p className="text-xs text-muted-foreground font-body">
-                      {log.amount_g}g &middot; {Math.round(log.calculated_calories)} kcal
+                      {formatLogLabel(log)} &middot; {Math.round(log.calculated_calories)} kcal
                     </p>
                   </div>
                   <button
@@ -317,19 +348,100 @@ export default function FoodPage() {
                   Cancel
                 </button>
               </div>
-              <div className="flex items-center gap-3">
-                <label className="text-sm font-body text-muted-foreground">Amount (g)</label>
-                <input
-                  type="number"
-                  min={1}
-                  max={5000}
-                  value={amountG}
-                  onChange={(e) => setAmountG(Number(e.target.value))}
-                  className="w-24 px-3 py-2 bg-background border border-border rounded-xl font-body text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-              </div>
+
+              {selectedPreset.serving_units && Object.keys(selectedPreset.serving_units).length > 0 && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <label className="text-sm font-body text-muted-foreground">Unit</label>
+                    <div className="flex flex-wrap gap-2">
+                      {Object.keys(selectedPreset.serving_units).map((unit) => (
+                        <button
+                          key={unit}
+                          onClick={() => {
+                            setSelectedUnit(unit);
+                            setUnitQuantity(1);
+                          }}
+                          className={`px-3 py-1.5 rounded-full text-xs font-body font-medium transition-colors ${
+                            selectedUnit === unit
+                              ? "bg-foreground text-background"
+                              : "bg-muted text-muted-foreground hover:text-foreground"
+                          }`}
+                        >
+                          {UNIT_LABELS[unit] || unit}
+                        </button>
+                      ))}
+                      <button
+                        onClick={() => {
+                          setSelectedUnit(null);
+                          setAmountG(100);
+                        }}
+                        className={`px-3 py-1.5 rounded-full text-xs font-body font-medium transition-colors ${
+                          selectedUnit === null
+                            ? "bg-foreground text-background"
+                            : "bg-muted text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        Grams
+                      </button>
+                    </div>
+                  </div>
+
+                  {selectedUnit ? (
+                    <div className="flex items-center gap-3">
+                      <label className="text-sm font-body text-muted-foreground">Quantity</label>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setUnitQuantity((q) => Math.max(0.25, q - 0.25))}
+                          className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-sm font-body hover:bg-muted/80"
+                        >
+                          -
+                        </button>
+                        <span className="text-sm font-body w-12 text-center">
+                          {unitQuantity % 1 === 0 ? unitQuantity : unitQuantity.toFixed(2)}
+                        </span>
+                        <button
+                          onClick={() => setUnitQuantity((q) => q + 0.25)}
+                          className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-sm font-body hover:bg-muted/80"
+                        >
+                          +
+                        </button>
+                      </div>
+                      <span className="text-xs text-muted-foreground font-body">
+                        ~{Math.round(getEffectiveAmount(selectedPreset, selectedUnit, unitQuantity, amountG))}g
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-3">
+                      <label className="text-sm font-body text-muted-foreground">Amount (g)</label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={5000}
+                        value={amountG}
+                        onChange={(e) => setAmountG(Number(e.target.value))}
+                        className="w-24 px-3 py-2 bg-background border border-border rounded-xl font-body text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {(!selectedPreset.serving_units || Object.keys(selectedPreset.serving_units).length === 0) && (
+                <div className="flex items-center gap-3">
+                  <label className="text-sm font-body text-muted-foreground">Amount (g)</label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={5000}
+                    value={amountG}
+                    onChange={(e) => setAmountG(Number(e.target.value))}
+                    className="w-24 px-3 py-2 bg-background border border-border rounded-xl font-body text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
+              )}
+
               {(() => {
-                const m = calculateMacros(selectedPreset, amountG);
+                const m = calculateMacros(selectedPreset, effectiveAmount);
                 return (
                   <div className="flex gap-3 text-xs text-muted-foreground font-body">
                     <span>{m.calories} kcal</span>

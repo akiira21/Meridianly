@@ -233,6 +233,7 @@ def get_my_profile(user: dict = Depends(get_current_user)):
         role=u.role.value if hasattr(u, "role") else "user",
         ai_requests_used=u.ai_requests_used or 0,
         ai_requests_reset_at=u.ai_requests_reset_at,
+        ai_insights_enabled=u.ai_insights_enabled if hasattr(u, "ai_insights_enabled") else True,
         created_at=u.created_at,
     )
 
@@ -251,6 +252,7 @@ def update_my_profile(
         user_id=user["user_id"],
         name=data.name,
         avatar_url=data.avatar_url,
+        ai_insights_enabled=data.ai_insights_enabled,
     )
     if not updated:
         return JSONResponse(
@@ -268,6 +270,7 @@ def update_my_profile(
         role="user",
         ai_requests_used=u.ai_requests_used or 0,
         ai_requests_reset_at=u.ai_requests_reset_at,
+        ai_insights_enabled=u.ai_insights_enabled or True,
         created_at=u.created_at,
     )
 
